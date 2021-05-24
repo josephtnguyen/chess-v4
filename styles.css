@@ -1,0 +1,43 @@
+body {
+  margin: 0;
+}
+
+.align-center {
+  text-align: center;
+}
+
+.container {
+  max-width: 100rem;
+  margin: auto;
+}
+
+.row {
+  display: flex;
+}
+
+.col-sm-full {
+  flex-basis: 100%;
+}
+
+.board {
+  display: flex;
+  flex-direction: column-reverse;
+  width: 40rem;
+  height: 40rem;
+  margin: auto;
+  border: 1px solid black;
+}
+
+.black-tile,
+.white-tile {
+  width: calc(100% / 8);
+  height: 5rem;
+}
+
+.black-tile {
+  background-color: black;
+}
+
+.white-tile {
+  background-color: white;
+}
