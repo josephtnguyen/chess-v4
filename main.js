@@ -232,9 +232,6 @@ function knightMoveSpace(turn, start) {
     } else if (board[newSpot][0] === turn[1]) {
       moveSpace.push(newSpot);
     }
-
-    for (var multiplier = 1; multiplier < 9; multiplier++) {
-    }
   }
   return moveSpace;
 }
@@ -278,6 +275,25 @@ function queenMoveSpace(turn, start) {
         moveSpace.push(newSpot);
         break;
       }
+    }
+  }
+  return moveSpace;
+}
+
+function kingMoveSpace(turn, start, killsOnly) {
+  var moveSpace = [];
+  var kingMoves = [10, -10, 1, -1, 11, -11, 9, -9];
+
+  for (var i = 0; i < kingMoves.length; i++) {
+    var newSpot = start + kingMoves[i];
+    if (notACoord(newSpot)) {
+      continue;
+    } else if (!board[newSpot]) {
+      moveSpace.push(newSpot);
+    } else if (board[newSpot][0] === turn[0]) {
+      continue;
+    } else if (board[newSpot][0] === turn[1]) {
+      moveSpace.push(newSpot);
     }
   }
   return moveSpace;
