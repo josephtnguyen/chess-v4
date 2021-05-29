@@ -62,7 +62,7 @@ function createJSBoard() {
     } else if (coords[i] === 11 || coords[i] === 18 || coords[i] === 81 || coords[i] === 88) {
       board[coords[i]] = 'r';
     } else if (coords[i] === 12 || coords[i] === 17 || coords[i] === 82 || coords[i] === 87) {
-      board[coords[i]] = 'k';
+      board[coords[i]] = 'n';
     } else if (coords[i] === 13 || coords[i] === 16 || coords[i] === 83 || coords[i] === 86) {
       board[coords[i]] = 'b';
     } else if (coords[i] === 14 || coords[i] === 84) {
@@ -211,6 +211,28 @@ function rookMoveSpace(turn, start) {
         moveSpace.push(newSpot);
         break;
       }
+    }
+  }
+  return moveSpace;
+}
+
+function knightMoveSpace(turn, start) {
+  var moveSpace = [];
+  var knightMoves = [21, 12, -21, -12, 8, 19, -8, -19];
+
+  for (var i = 0; i < knightMoves.length; i++) {
+    var newSpot = start + knightMoves[i];
+    if (notACoord(newSpot)) {
+      continue;
+    } else if (!board[newSpot]) {
+      moveSpace.push(newSpot);
+    } else if (board[newSpot][0] === turn[0]) {
+      continue;
+    } else if (board[newSpot][0] === turn[1]) {
+      moveSpace.push(newSpot);
+    }
+
+    for (var multiplier = 1; multiplier < 9; multiplier++) {
     }
   }
   return moveSpace;

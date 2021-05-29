@@ -1,12 +1,12 @@
 .wp,
 .wr,
-.wk,
+.wn,
 .wb,
 .wq,
 .wk,
 .bp,
 .br,
-.bk,
+.bn,
 .bb,
 .bq,
 .bk {
@@ -21,8 +21,8 @@
   background-image: url(images/pieces/wr.png);
 }
 
-.wk {
-  background-image: url(images/pieces/wk.png);
+.wn {
+  background-image: url(images/pieces/wn.png);
 }
 
 .wb {
@@ -45,8 +45,8 @@
   background-image: url(images/pieces/br.png);
 }
 
-.bk {
-  background-image: url(images/pieces/bk.png);
+.bn {
+  background-image: url(images/pieces/bn.png);
 }
 
 .bb {
