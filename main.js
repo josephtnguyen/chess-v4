@@ -261,6 +261,28 @@ function bishopMoveSpace(turn, start) {
   return moveSpace;
 }
 
+function queenMoveSpace(turn, start) {
+  var moveSpace = [];
+  var queenMoves = [1, -1, 10, -10, 11, -11, 9, -9];
+
+  for (var i = 0; i < queenMoves.length; i++) {
+    for (var multiplier = 1; multiplier < 9; multiplier++) {
+      var newSpot = start + queenMoves[i] * multiplier;
+      if (notACoord(newSpot)) {
+        break;
+      } else if (!board[newSpot]) {
+        moveSpace.push(newSpot);
+      } else if (board[newSpot][0] === turn[0]) {
+        break;
+      } else if (board[newSpot][0] === turn[1]) {
+        moveSpace.push(newSpot);
+        break;
+      }
+    }
+  }
+  return moveSpace;
+}
+
 function playChess() {
   board = createJSBoard();
   flags = resetFlags();
