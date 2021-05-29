@@ -155,6 +155,7 @@ function handleClickPiece(event) {
   }
 
   flags.start = parseInt(event.target.closest('.tile').id);
+  event.target.closest('.tile').classList.add('selected');
 
   // highlight movespace of piece
   var moveSpace = findMoveSpace(flags.turn, flags.start, false);
@@ -233,6 +234,28 @@ function knightMoveSpace(turn, start) {
     }
 
     for (var multiplier = 1; multiplier < 9; multiplier++) {
+    }
+  }
+  return moveSpace;
+}
+
+function bishopMoveSpace(turn, start) {
+  var moveSpace = [];
+  var bishopMoves = [11, -11, 9, -9];
+
+  for (var i = 0; i < bishopMoves.length; i++) {
+    for (var multiplier = 1; multiplier < 9; multiplier++) {
+      var newSpot = start + bishopMoves[i] * multiplier;
+      if (notACoord(newSpot)) {
+        break;
+      } else if (!board[newSpot]) {
+        moveSpace.push(newSpot);
+      } else if (board[newSpot][0] === turn[0]) {
+        break;
+      } else if (board[newSpot][0] === turn[1]) {
+        moveSpace.push(newSpot);
+        break;
+      }
     }
   }
   return moveSpace;
