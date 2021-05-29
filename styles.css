@@ -10,6 +10,10 @@ body {
   border: 2px solid black;
 }
 
+.tile {
+  border: 1px solid black;
+}
+
 .board-row:nth-child(odd) > .tile:nth-child(odd) {
   background-color: tan;
 }
