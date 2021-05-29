@@ -10,12 +10,24 @@ body {
   border: 2px solid black;
 }
 
-.black-tile {
+.board-row:nth-child(odd) > .tile:nth-child(odd) {
   background-color: tan;
 }
 
-.white-tile {
+.board-row:nth-child(odd) > .tile:nth-child(even) {
   background-color: beige;
+}
+
+.board-row:nth-child(even) > .tile:nth-child(even) {
+  background-color: tan;
+}
+
+.board-row:nth-child(even) > .tile:nth-child(odd) {
+  background-color: beige;
+}
+
+#highlight {
+  background-color: skyblue;
 }
 
 .chess-piece {

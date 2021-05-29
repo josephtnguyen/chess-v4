@@ -24,8 +24,7 @@
   flex-basis: calc(100% / 8);
 }
 
-.black-tile,
-.white-tile {
+.tile {
   width: calc(100% / 8);
   display: flex;
   justify-content: center;

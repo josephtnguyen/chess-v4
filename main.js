@@ -3,6 +3,8 @@ var flags = resetFlags();
 
 var $board = document.querySelector('.board');
 
+$board.addEventListener('click', handleClickPiece);
+
 updateHTMLBoard();
 
 // Resetting/Displaying the Board & Utility Functions
@@ -10,7 +12,6 @@ function createHTMLBoard() {
   $board.innerHTML = '';
 
   var coords = coordsArray();
-  var addBlackTile = true;
 
   for (var i = 0; i < coords.length; i++) {
     // create a new row div at the start of each row
@@ -19,25 +20,14 @@ function createHTMLBoard() {
       $row.className = 'row board-row';
     }
 
-    // append either a black or white tile to the row
+    // append either a tile to the row
     var $tile = document.createElement('div');
-    if (addBlackTile) {
-      $tile.className = 'black-tile';
-    } else {
-      $tile.className = 'white-tile';
-    }
+    $tile.className = 'tile';
     $row.append($tile);
-
-    // append a div to display a chess piece
-    var $piece = document.createElement('div');
-    $piece.className = 'chess-piece'
-    $tile.append($piece);
 
     // append the row to the board at the end of each row
     if (coords[i] % 10 === 8) {
       $board.append($row);
-    } else {
-      addBlackTile = !addBlackTile;
     }
   }
 }
@@ -50,7 +40,11 @@ function updateHTMLBoard() {
     if (board[coords[i]]) {
       var row = Math.floor(coords[i] / 10) - 1;
       var col = Math.floor(coords[i] % 10) - 1;
-      $board.children[row].children[col].children[0].classList.add(board[coords[i]]);
+
+      // append a div to display a chess piece
+      var $piece = document.createElement('div');
+      $piece.classList.add('chess-piece', board[coords[i]]);
+      $board.children[row].children[col].append($piece);
     }
   }
 }
@@ -130,6 +124,20 @@ function coordsArray() {
 }
 
 // Running Chess
+function handleClickPiece(event) {
+  if (!event.target.matches('.chess-piece')) {
+    return;
+  }
+
+  var turnOfPiece = event.target.classList[1][0];
+  if (turnOfPiece !== flags.turn) {
+    return;
+  }
+
+  console.log('is the correct turn');
+  event.target.closest('.tile').id = 'highlight';
+}
+
 function playChess() {
   board = createJSBoard();
   flags = resetFlags();
