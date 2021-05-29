@@ -1,43 +1,24 @@
+* {
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
 body {
-  margin: 0;
-}
-
-.align-center {
-  text-align: center;
-}
-
-.container {
-  max-width: 100rem;
-  margin: auto;
-}
-
-.row {
-  display: flex;
-}
-
-.col-sm-full {
-  flex-basis: 100%;
+  background-color: aquamarine;
 }
 
 .board {
-  display: flex;
-  flex-direction: column-reverse;
-  width: 40rem;
-  height: 40rem;
-  margin: auto;
-  border: 1px solid black;
-}
-
-.black-tile,
-.white-tile {
-  width: calc(100% / 8);
-  height: 5rem;
+  border: 2px solid black;
 }
 
 .black-tile {
-  background-color: black;
+  background-color: tan;
 }
 
 .white-tile {
-  background-color: white;
+  background-color: beige;
+}
+
+.chess-piece {
+  width: 60%;
+  height: 60%;
 }

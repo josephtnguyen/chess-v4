@@ -1,42 +1,65 @@
 var board = createJSBoard();
 var flags = resetFlags();
 
+var $board = document.querySelector('.board');
 
-createHTMLBoard();
+updateHTMLBoard();
 
+// Resetting/Displaying the Board & Utility Functions
 function createHTMLBoard() {
-  var $board = document.querySelector('.board');
   $board.innerHTML = '';
 
   var coords = coordsArray();
   var addBlackTile = true;
 
   for (var i = 0; i < coords.length; i++) {
+    // create a new row div at the start of each row
     if (coords[i] % 10 === 1) {
       var $row = document.createElement('div');
-      $row.className = 'row';
+      $row.className = 'row board-row';
     }
 
+    // append either a black or white tile to the row
     var $tile = document.createElement('div');
     if (addBlackTile) {
       $tile.className = 'black-tile';
     } else {
       $tile.className = 'white-tile';
     }
-    $row.appendChild($tile);
+    $row.append($tile);
 
+    // append a div to display a chess piece
+    var $piece = document.createElement('div');
+    $piece.className = 'chess-piece'
+    $tile.append($piece);
+
+    // append the row to the board at the end of each row
     if (coords[i] % 10 === 8) {
-      $board.appendChild($row);
+      $board.append($row);
     } else {
       addBlackTile = !addBlackTile;
     }
   }
-  return $board;
+}
+
+function updateHTMLBoard() {
+  createHTMLBoard();
+
+  var coords = coordsArray();
+  for (var i = 0; i < coords.length; i++) {
+    if (board[coords[i]]) {
+      var row = Math.floor(coords[i] / 10) - 1;
+      var col = Math.floor(coords[i] % 10) - 1;
+      $board.children[row].children[col].children[0].classList.add(board[coords[i]]);
+    }
+  }
 }
 
 function createJSBoard() {
   var coords = coordsArray();
   var board = {};
+
+  // add pieces to board
   for (var i = 0; i < coords.length; i++) {
     if ((20 < coords[i] && coords[i] < 29) || (70 < coords[i] && coords[i] < 79)) {
       board[coords[i]] = 'p';
@@ -54,6 +77,7 @@ function createJSBoard() {
       board[coords[i]] = null;
     }
 
+    // assign color to pieces
     if (10 < coords[i] && coords[i] < 29) {
       board[coords[i]] = 'w' + board[coords[i]];
     } else if (70 < coords[i] && coords[i] < 89) {
@@ -61,21 +85,18 @@ function createJSBoard() {
     }
   }
 
-  return board;
-}
-
-function coordsArray() {
-  var coords = [];
-  for (var i = 10; i < 90; i += 10) {
-    for (var j = 1; j < 9; j++) {
-      coords.push(i + j);
-    }
+  board.movePiece = function (start, end) {
+    board[end] = board[start];
+    board[start] = null;
+    updateHTMLBoard();
   }
-  return coords;
+
+  return board;
 }
 
 function resetFlags() {
   var flags = {};
+  flags.turn = 'w';
   flags.check = false;
   flags.checkmate = false;
   flags.draw = false;
@@ -96,4 +117,22 @@ function resetFlags() {
   flags.enPasssantBlack = 0;
 
   return flags;
+}
+
+function coordsArray() {
+  var coords = [];
+  for (var i = 10; i < 90; i += 10) {
+    for (var j = 1; j < 9; j++) {
+      coords.push(i + j);
+    }
+  }
+  return coords;
+}
+
+// Running Chess
+function playChess() {
+  board = createJSBoard();
+  flags = resetFlags();
+
+
 }
