@@ -26,7 +26,7 @@ body {
   background-color: beige;
 }
 
-#highlight {
+.board > .row.board-row > .tile.highlight {
   background-color: skyblue;
 }
 

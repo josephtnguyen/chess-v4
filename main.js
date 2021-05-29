@@ -4,6 +4,7 @@ var flags = resetFlags();
 var $board = document.querySelector('.board');
 
 $board.addEventListener('click', handleClickPiece);
+$board.addEventListener('click', handleMove);
 
 updateHTMLBoard();
 
@@ -23,6 +24,7 @@ function createHTMLBoard() {
     // append either a tile to the row
     var $tile = document.createElement('div');
     $tile.className = 'tile';
+    $tile.id = coords[i];
     $row.append($tile);
 
     // append the row to the board at the end of each row
@@ -90,7 +92,10 @@ function createJSBoard() {
 
 function resetFlags() {
   var flags = {};
-  flags.turn = 'w';
+  flags.turn = 'wb';
+  flags.nextTurn = 'bw';
+  flags.selecting = false;
+
   flags.check = false;
   flags.checkmate = false;
   flags.draw = false;
@@ -125,17 +130,53 @@ function coordsArray() {
 
 // Running Chess
 function handleClickPiece(event) {
+  if (flags.selecting) {
+    return;
+  }
+
   if (!event.target.matches('.chess-piece')) {
     return;
   }
 
   var turnOfPiece = event.target.classList[1][0];
-  if (turnOfPiece !== flags.turn) {
+  if (turnOfPiece !== flags.turn[0]) {
     return;
   }
 
-  console.log('is the correct turn');
-  event.target.closest('.tile').id = 'highlight';
+  var clickLocation = parseInt(event.target.closest('.tile').id);
+
+  // highlight movespace of piece
+  var moveSpace = findMoveSpace(flags.turn, clickLocation, false);
+  event.target.closest('.tile').classList.add('highlight');
+}
+
+function handleMove(event) {
+  if (!flags.selecting) {
+    return;
+  }
+}
+
+function findMoveSpace(turn, start, killsOnly) {
+  // returns array of possible moves
+  let moveSpace = new Set();
+  var piece = board[start][1];
+
+  if (piece === 'p') {
+    moveSpace.add(...pawnMoveSpace(turn, start, killsOnly));
+  } else if (piece === 'r') {
+    moveSpace.add(...rookMoveSpace(turn, start));
+  } else if (piece === 'n') {
+    moveSpace.add(...knightMoveSpace(turn, start));
+  } else if (piece === 'b') {
+    moveSpace.add(...bishopMoveSpace(turn, start));
+  } else if (piece === 'q') {
+    moveSpace.add(...queenMoveSpace(turn, start));
+  } else if (piece === 'k') {
+    moveSpace.add(...kingMoveSpace(turn, start, killsOnly));
+  }
+
+  var moveSpaceArray = [...moveSpace];
+  return moveSpaceArray;
 }
 
 function playChess() {
