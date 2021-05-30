@@ -153,23 +153,28 @@ function handleClick(event) {
     updateHTMLBoard();
     return;
   }
-  gamestate.start = parseInt(event.target.closest('.tile').id);
+  var location = parseInt(event.target.closest('.tile').id);
 
   if (gamestate.seeingOptions) {
-    decideMove(gamestate.start);
+    decideMove(location);
   } else {
-    showOptions(gamestate.start);
+    showOptions(location);
   }
 }
 
-function decideMove(start) {
-  var row = rowFromCoord(start);
-  var col = colFromCoord(start);
+function decideMove(end) {
+  var row = rowFromCoord(end);
+  var col = colFromCoord(end);
   if (!$board.children[row].children[col].matches('.highlight')) {
     gamestate.seeingOptions = false;
     updateHTMLBoard();
     return;
   }
+
+  board.movePiece(gamestate.start, end);
+  gamestate.seeingOptions = false;
+  gamestate.turn = gamestate.turn[1] + gamestate.turn[0];
+  updateHTMLBoard();
 }
 
 function showOptions(start) {
@@ -184,6 +189,8 @@ function showOptions(start) {
   if (turnOfPiece !== gamestate.turn[0]) {
     return;
   }
+
+  gamestate.start = start;
 
   // select piece
   $board.children[row].children[col].classList.add('selected');
