@@ -1,10 +1,9 @@
 var board = createJSBoard();
-var flags = resetFlags();
+var gamestate = resetGamestate();
 
 var $board = document.querySelector('.board');
 
-$board.addEventListener('click', handleClickPiece);
-$board.addEventListener('click', handleMove);
+document.addEventListener('click', handleClick);
 
 updateHTMLBoard();
 
@@ -90,33 +89,33 @@ function createJSBoard() {
   return board;
 }
 
-function resetFlags() {
-  var flags = {};
-  flags.turn = 'wb';
-  flags.nextTurn = 'bw';
-  flags.selecting = false;
-  flags.start = 0;
+function resetGamestate() {
+  var gamestate = {};
+  gamestate.turn = 'wb';
+  gamestate.nextTurn = 'bw';
+  gamestate.seeingOptions = false;
+  gamestate.start = 0;
 
-  flags.check = false;
-  flags.checkmate = false;
-  flags.draw = false;
+  gamestate.check = false;
+  gamestate.checkmate = false;
+  gamestate.draw = false;
 
-  flags.whiteQueenCastle = false;
-  flags.whiteKingCastle = false;
-  flags.whiteKingMoved = false;
-  flags.whiteQueenRookMoved = false;
-  flags.whiteKingRookMoved = false;
+  gamestate.whiteQueenCastle = false;
+  gamestate.whiteKingCastle = false;
+  gamestate.whiteKingMoved = false;
+  gamestate.whiteQueenRookMoved = false;
+  gamestate.whiteKingRookMoved = false;
 
-  flags.blackQueenCastle = false;
-  flags.blackKingCastle = false;
-  flags.blackKingMoved = false;
-  flags.blackQueenRookMoved = false;
-  flags.blackKingRookMoved = false;
+  gamestate.blackQueenCastle = false;
+  gamestate.blackKingCastle = false;
+  gamestate.blackKingMoved = false;
+  gamestate.blackQueenRookMoved = false;
+  gamestate.blackKingRookMoved = false;
 
-  flags.enPassantWhite = 0;
-  flags.enPasssantBlack = 0;
+  gamestate.enPassantWhite = 0;
+  gamestate.enPasssantBlack = 0;
 
-  return flags;
+  return gamestate;
 }
 
 function coordsArray() {
@@ -139,45 +138,67 @@ function notACoord(number) {
   return true;
 }
 
-// Running Chess
-function handleClickPiece(event) {
-  if (flags.selecting) {
-    return;
-  }
-
-  if (!event.target.matches('.chess-piece')) {
-    return;
-  }
-
-  var turnOfPiece = event.target.classList[1][0];
-  if (turnOfPiece !== flags.turn[0]) {
-    return;
-  }
-
-  flags.start = parseInt(event.target.closest('.tile').id);
-  event.target.closest('.tile').classList.add('selected');
-
-  // highlight movespace of piece
-  var moveSpace = findMoveSpace(flags.turn, flags.start, false);
-  console.log(moveSpace);
-  for (var i = 0; i < moveSpace.length; i++) {
-    var row = Math.floor(moveSpace[i] / 10) - 1;
-    var col = Math.floor(moveSpace[i] % 10) - 1;
-    $board.children[row].children[col].classList.add('highlight');
-  }
-
-  // allow user to select location to move
-  flags.selecting = true;
+function rowFromCoord(coord) {
+  return Math.floor(coord / 10) - 1;
 }
 
-function handleMove(event) {
-  if (!flags.selecting) {
+function colFromCoord(coord) {
+  return Math.floor(coord % 10) - 1;
+}
+
+// Running Chess
+function handleClick(event) {
+  if (!event.target.closest('.board')) {
+    gamestate.seeingOptions = false;
+    updateHTMLBoard();
     return;
+  }
+  gamestate.start = parseInt(event.target.closest('.tile').id);
+
+  if (gamestate.seeingOptions) {
+    decideMove(gamestate.start);
+  } else {
+    showOptions(gamestate.start);
+  }
+}
+
+function decideMove(start) {
+  var row = rowFromCoord(start);
+  var col = colFromCoord(start);
+  if (!$board.children[row].children[col].matches('.highlight')) {
+    gamestate.seeingOptions = false;
+    updateHTMLBoard();
+    return;
+  }
+}
+
+function showOptions(start) {
+  if (!board[start]) {
+    return;
+  }
+
+  var row = rowFromCoord(start);
+  var col = colFromCoord(start);
+
+  var turnOfPiece = $board.children[row].children[col].children[0].classList[1][0];
+  if (turnOfPiece !== gamestate.turn[0]) {
+    return;
+  }
+
+  // select piece
+  $board.children[row].children[col].classList.add('selected');
+  gamestate.seeingOptions = true;
+
+  // highlight movespace of piece
+  var moveSpace = findMoveSpace(gamestate.turn, start, false);
+  for (var i = 0; i < moveSpace.length; i++) {
+    var row = rowFromCoord(moveSpace[i]);
+    var col = colFromCoord(moveSpace[i]);
+    $board.children[row].children[col].classList.add('highlight');
   }
 }
 
 function findMoveSpace(turn, start, killsOnly) {
-  // returns array of possible moves
   var piece = board[start][1];
 
   if (piece === 'p') {
@@ -193,6 +214,60 @@ function findMoveSpace(turn, start, killsOnly) {
   } else if (piece === 'k') {
     return kingMoveSpace(turn, start, killsOnly);
   }
+}
+
+function pawnMoveSpace(turn, start, killsOnly) {
+  var moveSpace = [];
+  if (board[start][0] === 'w') {
+    // starting moves
+    if (!killsOnly) {
+      if (!board[start + 10]) {
+        moveSpace.push(start + 10);
+      }
+      if ((start < 30) && !board[start + 10] && !board[start + 20]) {
+        moveSpace.push(start + 20);
+      }
+    }
+    // attack moves
+    var pawnMoves = [9, 11];
+    for (var i = 0; i < pawnMoves.length; i++) {
+      var newSpot = start + pawnMoves[i];
+      if (notACoord(newSpot)) {
+        continue;
+      } else if (!board[newSpot]) {
+        continue;
+      } else if (board[newSpot][0] === turn[0]) {
+        continue;
+      } else if (board[newSpot][0] === turn[1]) {
+        moveSpace.push(newSpot);
+      }
+    }
+  } else if (board[start][0] === 'b') {
+    // starting moves
+    if (!killsOnly) {
+      if (!board[start - 10]) {
+        moveSpace.push(start - 10);
+      }
+      if ((start > 70) && !board[start - 10] && !board[start - 20]) {
+        moveSpace.push(start - 20);
+      }
+    }
+    // attack moves
+    var pawnMoves = [-9, -11];
+    for (var i = 0; i < pawnMoves.length; i++) {
+      var newSpot = start + pawnMoves[i];
+      if (notACoord(newSpot)) {
+        continue;
+      } else if (!board[newSpot]) {
+        continue;
+      } else if (board[newSpot][0] === turn[0]) {
+        continue;
+      } else if (board[newSpot][0] === turn[1]) {
+        moveSpace.push(newSpot);
+      }
+    }
+  }
+  return moveSpace;
 }
 
 function rookMoveSpace(turn, start) {
@@ -301,7 +376,7 @@ function kingMoveSpace(turn, start, killsOnly) {
 
 function playChess() {
   board = createJSBoard();
-  flags = resetFlags();
+  gamestate = resetFlags();
 
 
 }
