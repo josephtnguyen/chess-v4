@@ -10,6 +10,7 @@ updateHTMLBoard();
 // Resetting/Displaying the Board & Utility Functions
 function createHTMLBoard() {
   $board.innerHTML = '';
+  $board.applyClassToTile = applyClassToTile;
 
   var coords = coordsArray();
 
@@ -80,11 +81,9 @@ function createJSBoard() {
     }
   }
 
-  board.movePiece = function (start, end) {
-    board[end] = board[start];
-    board[start] = null;
-    updateHTMLBoard();
-  }
+  board.movePiece = movePiece;
+  board.findMoveSpace = findMoveSpace;
+  board.findEnemyMoveSpace = findEnemyMoveSpace;
 
   return board;
 }
@@ -146,6 +145,12 @@ function colFromCoord(coord) {
   return Math.floor(coord % 10) - 1;
 }
 
+function applyClassToTile(coord, cssClass) {
+  var row = rowFromCoord(coord);
+  var col = colFromCoord(coord);
+  this.children[row].children[col].classList.add(cssClass);
+}
+
 // Running Chess
 function handleClick(event) {
   if (!event.target.closest('.board')) {
@@ -153,12 +158,12 @@ function handleClick(event) {
     updateHTMLBoard();
     return;
   }
-  var location = parseInt(event.target.closest('.tile').id);
+  var coord = parseInt(event.target.closest('.tile').id);
 
   if (gamestate.seeingOptions) {
-    decideMove(location);
+    decideMove(coord);
   } else {
-    showOptions(location);
+    showOptions(coord);
   }
 }
 
@@ -182,48 +187,50 @@ function showOptions(start) {
     return;
   }
 
-  var row = rowFromCoord(start);
-  var col = colFromCoord(start);
-
-  var turnOfPiece = $board.children[row].children[col].children[0].classList[1][0];
-  if (turnOfPiece !== gamestate.turn[0]) {
+  if (!isViableStart(start, gamestate.turn)) {
     return;
   }
-
   gamestate.start = start;
+  console.log('gamestate.start:', gamestate.start);
 
   // select piece
-  $board.children[row].children[col].classList.add('selected');
+  $board.applyClassToTile(start, 'selected');
   gamestate.seeingOptions = true;
 
-  // highlight movespace of piece
-  var moveSpace = findMoveSpace(gamestate.turn, start, false);
+  // find all potential moves
+  var potentialMoves = [];
+  var moveSpace = board.findMoveSpace(gamestate.turn, start, false);
   for (var i = 0; i < moveSpace.length; i++) {
-    var row = rowFromCoord(moveSpace[i]);
-    var col = colFromCoord(moveSpace[i]);
-    $board.children[row].children[col].classList.add('highlight');
+    if (isViableMove(gamestate.turn, start, moveSpace[i])) {
+      potentialMoves.push(moveSpace[i]);
+    }
+  }
+
+  // highlight all potential moves
+  for (var i = 0; i < potentialMoves.length; i++) {
+    $board.applyClassToTile(potentialMoves[i], 'highlight');
   }
 }
 
 function findMoveSpace(turn, start, killsOnly) {
-  var piece = board[start][1];
+  var piece = this[start][1];
 
   if (piece === 'p') {
-    return pawnMoveSpace(turn, start, killsOnly);
+    return pawnMoveSpace(this, turn, start, killsOnly);
   } else if (piece === 'r') {
-    return rookMoveSpace(turn, start);
+    return rookMoveSpace(this, turn, start);
   } else if (piece === 'n') {
-    return knightMoveSpace(turn, start);
+    return knightMoveSpace(this, turn, start);
   } else if (piece === 'b') {
-    return bishopMoveSpace(turn, start);
+    return bishopMoveSpace(this, turn, start);
   } else if (piece === 'q') {
-    return queenMoveSpace(turn, start);
+    return queenMoveSpace(this, turn, start);
   } else if (piece === 'k') {
-    return kingMoveSpace(turn, start, killsOnly);
+    return kingMoveSpace(this, turn, start, killsOnly);
   }
 }
 
-function pawnMoveSpace(turn, start, killsOnly) {
+function pawnMoveSpace(board, turn, start, killsOnly) {
   var moveSpace = [];
   if (board[start][0] === 'w') {
     // starting moves
@@ -277,7 +284,7 @@ function pawnMoveSpace(turn, start, killsOnly) {
   return moveSpace;
 }
 
-function rookMoveSpace(turn, start) {
+function rookMoveSpace(board, turn, start) {
   var moveSpace = [];
   var rookMoves = [1, -1, 10, -10];
 
@@ -299,7 +306,7 @@ function rookMoveSpace(turn, start) {
   return moveSpace;
 }
 
-function knightMoveSpace(turn, start) {
+function knightMoveSpace(board, turn, start) {
   var moveSpace = [];
   var knightMoves = [21, 12, -21, -12, 8, 19, -8, -19];
 
@@ -318,7 +325,7 @@ function knightMoveSpace(turn, start) {
   return moveSpace;
 }
 
-function bishopMoveSpace(turn, start) {
+function bishopMoveSpace(board, turn, start) {
   var moveSpace = [];
   var bishopMoves = [11, -11, 9, -9];
 
@@ -340,7 +347,7 @@ function bishopMoveSpace(turn, start) {
   return moveSpace;
 }
 
-function queenMoveSpace(turn, start) {
+function queenMoveSpace(board, turn, start) {
   var moveSpace = [];
   var queenMoves = [1, -1, 10, -10, 11, -11, 9, -9];
 
@@ -362,7 +369,7 @@ function queenMoveSpace(turn, start) {
   return moveSpace;
 }
 
-function kingMoveSpace(turn, start, killsOnly) {
+function kingMoveSpace(board, turn, start, killsOnly) {
   var moveSpace = [];
   var kingMoves = [10, -10, 1, -1, 11, -11, 9, -9];
 
@@ -379,6 +386,77 @@ function kingMoveSpace(turn, start, killsOnly) {
     }
   }
   return moveSpace;
+}
+
+function findEnemyMoveSpace(turn) {
+  var enemyMoveSpace = [];
+  var enemyCoord = [];
+  var coords = coordsArray();
+
+  // find location of all enemy pieces
+  for (var i = 0; i < coords.length; i++) {
+    if (!this[coords[i]]) {
+      continue;
+    } else if (this[coords[i]][0] === turn[1]) {
+      enemyCoord.push(coords[i]);
+    }
+  }
+
+  // union all move spaces of enemy pieces
+  for (i = 0; i < enemyCoord.length; i++) {
+    enemyMoveSpace.push(...this.findMoveSpace(turn[1] + turn[0], enemyCoord[i], true));
+  }
+  return enemyMoveSpace;
+}
+
+function isViableStart(start, turn) {
+  if (board[start][0] !== turn[0]) {
+    return false;
+  }
+
+  var moveSpace = board.findMoveSpace(turn, start, false);
+  if (!moveSpace) {
+    return false;
+  }
+
+  // is viable start if it has viable moves
+  for (var i = 0; i < moveSpace.length; i++) {
+    if (isViableMove(turn, start, moveSpace[i])) {
+      return true;
+    }
+  }
+
+  return false;
+
+}
+
+function isViableMove(turn, start, end) {
+  var potentialBoard = {...board};
+  potentialBoard.movePiece(start, end);
+  var enemyMoveSpace = potentialBoard.findEnemyMoveSpace(turn);
+
+  // find ally king coord after move
+  var coords = coordsArray();
+  for (var i = 0; i < coords.length; i++) {
+    if (potentialBoard[coords[i]] === turn[0] + 'k') {
+      var kingCoord = coords[i];
+      break;
+    }
+  }
+
+  // is not viable if king is in enemy move space
+  for (i = 0; i < enemyMoveSpace.length; i++) {
+    if (kingCoord === enemyMoveSpace[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function movePiece(start, end) {
+  this[end] = this[start];
+  this[start] = null;
 }
 
 function playChess() {
