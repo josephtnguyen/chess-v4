@@ -389,7 +389,7 @@ function kingMoveSpace(board, turn, start, killsOnly) {
 }
 
 function findEnemyMoveSpace(turn) {
-  var enemyMoveSpace = [];
+  var enemyMoveSpace = new Set();
   var enemyCoord = [];
   var coords = coordsArray();
 
@@ -404,9 +404,12 @@ function findEnemyMoveSpace(turn) {
 
   // union all move spaces of enemy pieces
   for (i = 0; i < enemyCoord.length; i++) {
-    enemyMoveSpace.push(...this.findMoveSpace(turn[1] + turn[0], enemyCoord[i], true));
+    var eachMoveSpace = this.findMoveSpace(turn[1] + turn[0], enemyCoord[i], true);
+    for (var j = 0; j < eachMoveSpace.length; j++) {
+      enemyMoveSpace.add(eachMoveSpace[j]);
+    }
   }
-  return enemyMoveSpace;
+  return [...enemyMoveSpace];
 }
 
 function isViableStart(start, turn) {
