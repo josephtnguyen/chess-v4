@@ -176,10 +176,21 @@ function decideMove(end) {
     return;
   }
 
+  // move piece
   board.movePiece(gamestate.start, end);
   gamestate.seeingOptions = false;
-  gamestate.turn = gamestate.turn[1] + gamestate.turn[0];
   updateHTMLBoard();
+
+  // apply scans
+  // pawnScan(); to be added
+  checkmateScan();
+  // drawScan(); to be added
+  checkScan();
+  // castleScan(); to be added
+
+  // change turn
+  gamestate.nextTurn = gamestate.turn;
+  gamestate.turn = gamestate.turn[1] + gamestate.turn[0];
 }
 
 function showOptions(start) {
@@ -417,6 +428,7 @@ function isViableStart(start, turn) {
     return false;
   }
 
+  // find move space of start
   var moveSpace = board.findMoveSpace(turn, start, false);
   if (!moveSpace) {
     return false;
@@ -462,9 +474,32 @@ function movePiece(start, end) {
   this[start] = null;
 }
 
-function playChess() {
-  board = createJSBoard();
-  gamestate = resetFlags();
+function checkmateScan() {
+  var enemyCoords = [];
 
+  // find location of all enemies
+  var coords = coordsArray();
+  for (var i = 0; i < coords.length; i++) {
+    if (board[coords[i]]) {
+      if (board[coords[i]][0] === gamestate.turn[1]) {
+        enemyCoords.push(coords[i]);
+      }
+    }
+  }
+
+  // return if there is no checkmate
+  for (i = 0; i < enemyCoords.length; i++) {
+    if (isViableStart(enemyCoords[i], gamestate.nextTurn)) {
+      return;
+    }
+    // might need more code? line 735
+  }
+
+  // otherwise checkmate
+  gamestate.checkmate = true;
+  console.log('Checkmate!');
+}
+
+function checkScan() {
 
 }
