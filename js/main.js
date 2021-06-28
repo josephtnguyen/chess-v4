@@ -1,3 +1,4 @@
+/* global Coords */
 let board = createNewJSBoard();
 const gamestate = resetGameState();
 
@@ -12,12 +13,13 @@ function createHTMLBoard() {
   $board.innerHTML = '';
   $board.applyClassToTile = applyClassToTile;
 
-  const coords = coordsArray();
+  const coords = new Coords();
 
+  let $row;
   for (let i = 0; i < coords.length; i++) {
     // create a new row div at the start of each row
     if (coords[i] % 10 === 1) {
-      const $row = document.createElement('div');
+      $row = document.createElement('div');
       $row.className = 'row board-row';
     }
 
@@ -202,7 +204,6 @@ function showOptions(start) {
     return;
   }
   gamestate.start = start;
-  console.log('gamestate.start:', gamestate.start);
 
   // select piece
   $board.applyClassToTile(start, 'selected');
@@ -211,7 +212,7 @@ function showOptions(start) {
   // find all potential moves
   const potentialMoves = [];
   const moveSpace = board.findMoveSpace(gamestate.turn, start, false);
-  for (const i = 0; i < moveSpace.length; i++) {
+  for (let i = 0; i < moveSpace.length; i++) {
     if (isViableMove(gamestate.turn, start, moveSpace[i])) {
       potentialMoves.push(moveSpace[i]);
     }
@@ -255,7 +256,7 @@ function pawnMoveSpace(board, turn, start, killsOnly) {
     }
     // attack moves
     const pawnMoves = [9, 11];
-    for (const i = 0; i < pawnMoves.length; i++) {
+    for (let i = 0; i < pawnMoves.length; i++) {
       const newSpot = start + pawnMoves[i];
       if (notACoord(newSpot)) {
         continue;
@@ -279,7 +280,7 @@ function pawnMoveSpace(board, turn, start, killsOnly) {
     }
     // attack moves
     const pawnMoves = [-9, -11];
-    for (const i = 0; i < pawnMoves.length; i++) {
+    for (let i = 0; i < pawnMoves.length; i++) {
       const newSpot = start + pawnMoves[i];
       if (notACoord(newSpot)) {
         continue;
@@ -299,8 +300,8 @@ function rookMoveSpace(board, turn, start) {
   const moveSpace = [];
   const rookMoves = [1, -1, 10, -10];
 
-  for (const i = 0; i < rookMoves.length; i++) {
-    for (const multiplier = 1; multiplier < 9; multiplier++) {
+  for (let i = 0; i < rookMoves.length; i++) {
+    for (let multiplier = 1; multiplier < 9; multiplier++) {
       const newSpot = start + rookMoves[i] * multiplier;
       if (notACoord(newSpot)) {
         break;
@@ -321,7 +322,7 @@ function knightMoveSpace(board, turn, start) {
   const moveSpace = [];
   const knightMoves = [21, 12, -21, -12, 8, 19, -8, -19];
 
-  for (const i = 0; i < knightMoves.length; i++) {
+  for (let i = 0; i < knightMoves.length; i++) {
     const newSpot = start + knightMoves[i];
     if (notACoord(newSpot)) {
       continue;
@@ -340,8 +341,8 @@ function bishopMoveSpace(board, turn, start) {
   const moveSpace = [];
   const bishopMoves = [11, -11, 9, -9];
 
-  for (const i = 0; i < bishopMoves.length; i++) {
-    for (const multiplier = 1; multiplier < 9; multiplier++) {
+  for (let i = 0; i < bishopMoves.length; i++) {
+    for (let multiplier = 1; multiplier < 9; multiplier++) {
       const newSpot = start + bishopMoves[i] * multiplier;
       if (notACoord(newSpot)) {
         break;
@@ -362,8 +363,8 @@ function queenMoveSpace(board, turn, start) {
   const moveSpace = [];
   const queenMoves = [1, -1, 10, -10, 11, -11, 9, -9];
 
-  for (const i = 0; i < queenMoves.length; i++) {
-    for (const multiplier = 1; multiplier < 9; multiplier++) {
+  for (let i = 0; i < queenMoves.length; i++) {
+    for (let multiplier = 1; multiplier < 9; multiplier++) {
       const newSpot = start + queenMoves[i] * multiplier;
       if (notACoord(newSpot)) {
         break;
@@ -384,7 +385,7 @@ function kingMoveSpace(board, turn, start, killsOnly) {
   const moveSpace = [];
   const kingMoves = [10, -10, 1, -1, 11, -11, 9, -9];
 
-  for (const i = 0; i < kingMoves.length; i++) {
+  for (let i = 0; i < kingMoves.length; i++) {
     const newSpot = start + kingMoves[i];
     if (notACoord(newSpot)) {
       continue;
@@ -405,7 +406,7 @@ function findEnemyMoveSpace(turn) {
   const coords = coordsArray();
 
   // find location of all enemy pieces
-  for (const i = 0; i < coords.length; i++) {
+  for (let i = 0; i < coords.length; i++) {
     if (!this[coords[i]]) {
       continue;
     } else if (this[coords[i]][0] === turn[1]) {
@@ -416,7 +417,7 @@ function findEnemyMoveSpace(turn) {
   // union all move spaces of enemy pieces
   for (i = 0; i < enemyCoord.length; i++) {
     const eachMoveSpace = this.findMoveSpace(turn[1] + turn[0], enemyCoord[i], true);
-    for (const j = 0; j < eachMoveSpace.length; j++) {
+    for (let j = 0; j < eachMoveSpace.length; j++) {
       enemyMoveSpace.add(eachMoveSpace[j]);
     }
   }
@@ -435,7 +436,7 @@ function isViableStart(start, turn) {
   }
 
   // is viable start if it has viable moves
-  for (const i = 0; i < moveSpace.length; i++) {
+  for (let i = 0; i < moveSpace.length; i++) {
     if (isViableMove(turn, start, moveSpace[i])) {
       return true;
     }
@@ -452,15 +453,16 @@ function isViableMove(turn, start, end) {
 
   // find ally king coord after move
   const coords = coordsArray();
-  for (const i = 0; i < coords.length; i++) {
+  let kingCoord;
+  for (let i = 0; i < coords.length; i++) {
     if (potentialBoard[coords[i]] === turn[0] + 'k') {
-      const kingCoord = coords[i];
+      kingCoord = coords[i];
       break;
     }
   }
 
   // is not viable if king is in enemy move space
-  for (i = 0; i < enemyMoveSpace.length; i++) {
+  for (let i = 0; i < enemyMoveSpace.length; i++) {
     if (kingCoord === enemyMoveSpace[i]) {
       return false;
     }
@@ -479,7 +481,7 @@ function checkmateScan() {
 
   // find location of all enemies
   const coords = coordsArray();
-  for (const i = 0; i < coords.length; i++) {
+  for (let i = 0; i < coords.length; i++) {
     if (board[coords[i]]) {
       if (board[coords[i]][0] === gamestate.turn[1]) {
         enemyCoords.push(coords[i]);
@@ -488,7 +490,7 @@ function checkmateScan() {
   }
 
   // return if there is no checkmate
-  for (i = 0; i < enemyCoords.length; i++) {
+  for (let i = 0; i < enemyCoords.length; i++) {
     if (isViableStart(enemyCoords[i], gamestate.nextTurn)) {
       return;
     }
