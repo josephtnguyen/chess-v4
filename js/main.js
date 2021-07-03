@@ -39,7 +39,7 @@ function createHTMLBoard() {
 function updateHTMLBoard() {
   createHTMLBoard();
 
-  const coords = coordsArray();
+  const coords = new Coords();
   for (let i = 0; i < coords.length; i++) {
     if (board[coords[i]]) {
       const row = Math.floor(coords[i] / 10) - 1;
@@ -54,7 +54,7 @@ function updateHTMLBoard() {
 }
 
 function createNewJSBoard() {
-  const coords = coordsArray();
+  const coords = new Coords();
   const board = {};
 
   // add pieces to board
@@ -119,18 +119,8 @@ function resetGameState() {
   return gamestate;
 }
 
-function coordsArray() {
-  const coords = [];
-  for (let i = 10; i < 90; i += 10) {
-    for (let j = 1; j < 9; j++) {
-      coords.push(i + j);
-    }
-  }
-  return coords;
-}
-
 function notACoord(number) {
-  const coords = coordsArray();
+  const coords = new Coords();
   for (let i = 0; i < coords.length; i++) {
     if (number === coords[i]) {
       return false;
@@ -403,7 +393,7 @@ function kingMoveSpace(board, turn, start, killsOnly) {
 function findEnemyMoveSpace(turn) {
   const enemyMoveSpace = new Set();
   const enemyCoord = [];
-  const coords = coordsArray();
+  const coords = new Coords();
 
   // find location of all enemy pieces
   for (let i = 0; i < coords.length; i++) {
@@ -452,7 +442,7 @@ function isViableMove(turn, start, end) {
   const enemyMoveSpace = potentialBoard.findEnemyMoveSpace(turn);
 
   // find ally king coord after move
-  const coords = coordsArray();
+  const coords = new Coords();
   let kingCoord;
   for (let i = 0; i < coords.length; i++) {
     if (potentialBoard[coords[i]] === turn[0] + 'k') {
@@ -480,7 +470,7 @@ function checkmateScan() {
   const enemyCoords = [];
 
   // find location of all enemies
-  const coords = coordsArray();
+  const coords = new Coords();
   for (let i = 0; i < coords.length; i++) {
     if (board[coords[i]]) {
       if (board[coords[i]][0] === gamestate.turn[1]) {
