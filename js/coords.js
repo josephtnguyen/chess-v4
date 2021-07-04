@@ -1,10 +1,18 @@
 /* export Coords */
 function Coords() {
-  const coords = [];
+  this.coords = [];
   for (let i = 10; i < 90; i += 10) {
     for (let j = 1; j < 9; j++) {
-      coords.push(i + j);
+      this.coords.push(i + j);
     }
   }
-  return coords;
+}
+
+Coords.prototype.isACoord = function (number) {
+  for (const coord of this.coords) {
+    if (number === coord) {
+      return true;
+    }
+  }
+  return false;
 }
