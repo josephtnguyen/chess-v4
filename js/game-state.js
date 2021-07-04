@@ -2,6 +2,7 @@
 function GameState() {
   this.turn = 'wb';
   this.nextTurn = 'bw';
+  this.turnNum = 1;
   this.seeingOptions = false;
   this.start = 0;
 
@@ -28,6 +29,7 @@ function GameState() {
 GameState.prototype.reset = function () {
   this.turn = 'wb';
   this.nextTurn = 'bw';
+  this.turnNum = 1;
   this.seeingOptions = false;
   this.start = 0;
 
@@ -49,4 +51,13 @@ GameState.prototype.reset = function () {
 
   this.enPassantWhite = 0;
   this.enPasssantBlack = 0;
+}
+
+GameState.prototype.changeTurn = function () {
+  if (this.turn === 'bw') {
+    this.turnNum++;
+    console.log('turnNum:', this.turnNum);
+  }
+  this.nextTurn = this.turn;
+  this.turn = this.turn[1] + this.turn[0];
 }

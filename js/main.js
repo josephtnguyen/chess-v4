@@ -99,14 +99,13 @@ function decideMove(end) {
 
   // apply scans
   // pawnScan(); to be added
-  checkmateScan();
+  checkmateScan(board, gamestate);
   // drawScan(); to be added
-  checkScan();
+  checkScan(board, gamestate);
   // castleScan(); to be added
 
   // change turn
-  gamestate.nextTurn = gamestate.turn;
-  gamestate.turn = gamestate.turn[1] + gamestate.turn[0];
+  gamestate.changeTurn();
 }
 
 function showOptions(start) {
@@ -186,7 +185,7 @@ function isViableMove(turn, start, end) {
   return true;
 }
 
-function checkmateScan() {
+function checkmateScan(board, gamestate) {
   const enemyCoords = [];
 
   // find location of all enemies
@@ -209,9 +208,36 @@ function checkmateScan() {
 
   // otherwise checkmate
   gamestate.checkmate = true;
-  console.log('Checkmate!');
+  console.log('Checkmate!!');
 }
 
-function checkScan() {
+function checkScan(board, gamestate) {
+  if (gamestate.checkmate) {
+    return;
+  }
 
+  const allyMoveSpace = board.findEnemyMoveSpace(gamestate.nextTurn);
+
+  // find enemy king coord after move
+  const coords = new Coords();
+  let kingCoord;
+  for (const coord of coords) {
+    if (board[coord].player === gamestate.turn[1] && board[coord].piece === 'k') {
+      kingCoord = coord;
+      break;
+    }
+  }
+
+  // change gamestate if there is check
+  for (const move of allyMoveSpace) {
+    if (kingCoord === move) {
+      gamestate.check = true;
+      console.log('Check!');
+      return;
+    }
+  }
+
+  // otherwise, remove any checks
+  gamestate.check = false;
+  console.log('no check');
 }
