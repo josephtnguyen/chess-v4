@@ -1,5 +1,5 @@
 /* global Coords */
-let board = createNewJSBoard();
+let board = new Board();
 const gamestate = resetGameState();
 
 const $board = document.querySelector('.board');
@@ -47,47 +47,10 @@ function updateHTMLBoard() {
 
       // append a div to display a chess piece
       const $piece = document.createElement('div');
-      $piece.classList.add('chess-piece', board[coords[i]]);
+      $piece.classList.add('chess-piece', board[coords[i]].player + board[coords[i]].piece);
       $board.children[row].children[col].append($piece);
     }
   }
-}
-
-function createNewJSBoard() {
-  const coords = new Coords();
-  const board = {};
-
-  // add pieces to board
-  for (let i = 0; i < coords.length; i++) {
-    if ((20 < coords[i] && coords[i] < 29) || (70 < coords[i] && coords[i] < 79)) {
-      board[coords[i]] = 'p';
-    } else if (coords[i] === 11 || coords[i] === 18 || coords[i] === 81 || coords[i] === 88) {
-      board[coords[i]] = 'r';
-    } else if (coords[i] === 12 || coords[i] === 17 || coords[i] === 82 || coords[i] === 87) {
-      board[coords[i]] = 'n';
-    } else if (coords[i] === 13 || coords[i] === 16 || coords[i] === 83 || coords[i] === 86) {
-      board[coords[i]] = 'b';
-    } else if (coords[i] === 14 || coords[i] === 84) {
-      board[coords[i]] = 'q';
-    } else if (coords[i] === 15 || coords[i] === 85) {
-      board[coords[i]] = 'k';
-    } else {
-      board[coords[i]] = null;
-    }
-
-    // assign color to pieces
-    if (10 < coords[i] && coords[i] < 29) {
-      board[coords[i]] = 'w' + board[coords[i]];
-    } else if (70 < coords[i] && coords[i] < 89) {
-      board[coords[i]] = 'b' + board[coords[i]];
-    }
-  }
-
-  board.movePiece = movePiece;
-  board.findMoveSpace = findMoveSpace;
-  board.findEnemyMoveSpace = findEnemyMoveSpace;
-
-  return board;
 }
 
 function resetGameState() {
@@ -119,16 +82,6 @@ function resetGameState() {
   return gamestate;
 }
 
-function notACoord(number) {
-  const coords = new Coords();
-  for (let i = 0; i < coords.length; i++) {
-    if (number === coords[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
 function rowFromCoord(coord) {
   return Math.floor(coord / 10) - 1;
 }
@@ -145,7 +98,7 @@ function applyClassToTile(coord, cssClass) {
 
 // Running Chess
 function handleClick(event) {
-  if (!event.target.closest('.board')) {
+  if (!event.target.closest('.tile')) {
     gamestate.seeingOptions = false;
     updateHTMLBoard();
     return;
@@ -186,7 +139,7 @@ function decideMove(end) {
 }
 
 function showOptions(start) {
-  if (!board[start]) {
+  if (board.isEmptyAt(start)) {
     return;
   }
 
@@ -214,208 +167,8 @@ function showOptions(start) {
   }
 }
 
-function findMoveSpace(turn, start, killsOnly) {
-  const piece = this[start][1];
-
-  if (piece === 'p') {
-    return pawnMoveSpace(this, turn, start, killsOnly);
-  } else if (piece === 'r') {
-    return rookMoveSpace(this, turn, start);
-  } else if (piece === 'n') {
-    return knightMoveSpace(this, turn, start);
-  } else if (piece === 'b') {
-    return bishopMoveSpace(this, turn, start);
-  } else if (piece === 'q') {
-    return queenMoveSpace(this, turn, start);
-  } else if (piece === 'k') {
-    return kingMoveSpace(this, turn, start, killsOnly);
-  }
-}
-
-function pawnMoveSpace(board, turn, start, killsOnly) {
-  const moveSpace = [];
-  if (board[start][0] === 'w') {
-    // starting moves
-    if (!killsOnly) {
-      if (!board[start + 10]) {
-        moveSpace.push(start + 10);
-      }
-      if ((start < 30) && !board[start + 10] && !board[start + 20]) {
-        moveSpace.push(start + 20);
-      }
-    }
-    // attack moves
-    const pawnMoves = [9, 11];
-    for (let i = 0; i < pawnMoves.length; i++) {
-      const newSpot = start + pawnMoves[i];
-      if (notACoord(newSpot)) {
-        continue;
-      } else if (!board[newSpot]) {
-        continue;
-      } else if (board[newSpot][0] === turn[0]) {
-        continue;
-      } else if (board[newSpot][0] === turn[1]) {
-        moveSpace.push(newSpot);
-      }
-    }
-  } else if (board[start][0] === 'b') {
-    // starting moves
-    if (!killsOnly) {
-      if (!board[start - 10]) {
-        moveSpace.push(start - 10);
-      }
-      if ((start > 70) && !board[start - 10] && !board[start - 20]) {
-        moveSpace.push(start - 20);
-      }
-    }
-    // attack moves
-    const pawnMoves = [-9, -11];
-    for (let i = 0; i < pawnMoves.length; i++) {
-      const newSpot = start + pawnMoves[i];
-      if (notACoord(newSpot)) {
-        continue;
-      } else if (!board[newSpot]) {
-        continue;
-      } else if (board[newSpot][0] === turn[0]) {
-        continue;
-      } else if (board[newSpot][0] === turn[1]) {
-        moveSpace.push(newSpot);
-      }
-    }
-  }
-  return moveSpace;
-}
-
-function rookMoveSpace(board, turn, start) {
-  const moveSpace = [];
-  const rookMoves = [1, -1, 10, -10];
-
-  for (let i = 0; i < rookMoves.length; i++) {
-    for (let multiplier = 1; multiplier < 9; multiplier++) {
-      const newSpot = start + rookMoves[i] * multiplier;
-      if (notACoord(newSpot)) {
-        break;
-      } else if (!board[newSpot]) {
-        moveSpace.push(newSpot);
-      } else if (board[newSpot][0] === turn[0]) {
-        break;
-      } else if (board[newSpot][0] === turn[1]) {
-        moveSpace.push(newSpot);
-        break;
-      }
-    }
-  }
-  return moveSpace;
-}
-
-function knightMoveSpace(board, turn, start) {
-  const moveSpace = [];
-  const knightMoves = [21, 12, -21, -12, 8, 19, -8, -19];
-
-  for (let i = 0; i < knightMoves.length; i++) {
-    const newSpot = start + knightMoves[i];
-    if (notACoord(newSpot)) {
-      continue;
-    } else if (!board[newSpot]) {
-      moveSpace.push(newSpot);
-    } else if (board[newSpot][0] === turn[0]) {
-      continue;
-    } else if (board[newSpot][0] === turn[1]) {
-      moveSpace.push(newSpot);
-    }
-  }
-  return moveSpace;
-}
-
-function bishopMoveSpace(board, turn, start) {
-  const moveSpace = [];
-  const bishopMoves = [11, -11, 9, -9];
-
-  for (let i = 0; i < bishopMoves.length; i++) {
-    for (let multiplier = 1; multiplier < 9; multiplier++) {
-      const newSpot = start + bishopMoves[i] * multiplier;
-      if (notACoord(newSpot)) {
-        break;
-      } else if (!board[newSpot]) {
-        moveSpace.push(newSpot);
-      } else if (board[newSpot][0] === turn[0]) {
-        break;
-      } else if (board[newSpot][0] === turn[1]) {
-        moveSpace.push(newSpot);
-        break;
-      }
-    }
-  }
-  return moveSpace;
-}
-
-function queenMoveSpace(board, turn, start) {
-  const moveSpace = [];
-  const queenMoves = [1, -1, 10, -10, 11, -11, 9, -9];
-
-  for (let i = 0; i < queenMoves.length; i++) {
-    for (let multiplier = 1; multiplier < 9; multiplier++) {
-      const newSpot = start + queenMoves[i] * multiplier;
-      if (notACoord(newSpot)) {
-        break;
-      } else if (!board[newSpot]) {
-        moveSpace.push(newSpot);
-      } else if (board[newSpot][0] === turn[0]) {
-        break;
-      } else if (board[newSpot][0] === turn[1]) {
-        moveSpace.push(newSpot);
-        break;
-      }
-    }
-  }
-  return moveSpace;
-}
-
-function kingMoveSpace(board, turn, start, killsOnly) {
-  const moveSpace = [];
-  const kingMoves = [10, -10, 1, -1, 11, -11, 9, -9];
-
-  for (let i = 0; i < kingMoves.length; i++) {
-    const newSpot = start + kingMoves[i];
-    if (notACoord(newSpot)) {
-      continue;
-    } else if (!board[newSpot]) {
-      moveSpace.push(newSpot);
-    } else if (board[newSpot][0] === turn[0]) {
-      continue;
-    } else if (board[newSpot][0] === turn[1]) {
-      moveSpace.push(newSpot);
-    }
-  }
-  return moveSpace;
-}
-
-function findEnemyMoveSpace(turn) {
-  const enemyMoveSpace = new Set();
-  const enemyCoord = [];
-  const coords = new Coords();
-
-  // find location of all enemy pieces
-  for (let i = 0; i < coords.length; i++) {
-    if (!this[coords[i]]) {
-      continue;
-    } else if (this[coords[i]][0] === turn[1]) {
-      enemyCoord.push(coords[i]);
-    }
-  }
-
-  // union all move spaces of enemy pieces
-  for (i = 0; i < enemyCoord.length; i++) {
-    const eachMoveSpace = this.findMoveSpace(turn[1] + turn[0], enemyCoord[i], true);
-    for (let j = 0; j < eachMoveSpace.length; j++) {
-      enemyMoveSpace.add(eachMoveSpace[j]);
-    }
-  }
-  return [...enemyMoveSpace];
-}
-
 function isViableStart(start, turn) {
-  if (board[start][0] !== turn[0]) {
+  if (board[start].player !== turn[0]) {
     return false;
   }
 
@@ -438,15 +191,17 @@ function isViableStart(start, turn) {
 
 function isViableMove(turn, start, end) {
   const potentialBoard = {...board};
+  Object.setPrototypeOf(potentialBoard, Board.prototype);
   potentialBoard.movePiece(start, end);
   const enemyMoveSpace = potentialBoard.findEnemyMoveSpace(turn);
 
   // find ally king coord after move
   const coords = new Coords();
   let kingCoord;
-  for (let i = 0; i < coords.length; i++) {
-    if (potentialBoard[coords[i]] === turn[0] + 'k') {
-      kingCoord = coords[i];
+  for (const coord of coords) {
+    if (potentialBoard[coord].player === turn[0] && potentialBoard[coord].piece === 'k') {
+      kingCoord = coord;
+      console.log('found');
       break;
     }
   }
@@ -461,27 +216,22 @@ function isViableMove(turn, start, end) {
   return true;
 }
 
-function movePiece(start, end) {
-  this[end] = this[start];
-  this[start] = null;
-}
-
 function checkmateScan() {
   const enemyCoords = [];
 
   // find location of all enemies
   const coords = new Coords();
-  for (let i = 0; i < coords.length; i++) {
-    if (board[coords[i]]) {
-      if (board[coords[i]][0] === gamestate.turn[1]) {
-        enemyCoords.push(coords[i]);
+  for (const coord of coords) {
+    if (board[coord]) {
+      if (board[coord].player === gamestate.turn[1]) {
+        enemyCoords.push(coord);
       }
     }
   }
 
   // return if there is no checkmate
-  for (let i = 0; i < enemyCoords.length; i++) {
-    if (isViableStart(enemyCoords[i], gamestate.nextTurn)) {
+  for (const enemyCoord of enemyCoords) {
+    if (isViableStart(enemyCoord, gamestate.nextTurn)) {
       return;
     }
     // might need more code? line 735

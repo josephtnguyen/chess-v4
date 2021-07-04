@@ -6,7 +6,7 @@ function Coords() {
       this.push(i + j);
     }
   }
-  this.isACoord = function (number) {
+  this.isCoord = function (number) {
     for (const coord of this) {
       if (number === coord) {
         return true;
