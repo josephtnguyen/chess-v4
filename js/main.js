@@ -1,6 +1,6 @@
 /* global Coords */
-let board = new Board();
-const gamestate = resetGameState();
+const board = new Board();
+const gamestate = new GameState();
 
 const $board = document.querySelector('.board');
 
@@ -51,35 +51,6 @@ function updateHTMLBoard() {
       $board.children[row].children[col].append($piece);
     }
   }
-}
-
-function resetGameState() {
-  const gamestate = {};
-  gamestate.turn = 'wb';
-  gamestate.nextTurn = 'bw';
-  gamestate.seeingOptions = false;
-  gamestate.start = 0;
-
-  gamestate.check = false;
-  gamestate.checkmate = false;
-  gamestate.draw = false;
-
-  gamestate.whiteQueenCastle = false;
-  gamestate.whiteKingCastle = false;
-  gamestate.whiteKingMoved = false;
-  gamestate.whiteQueenRookMoved = false;
-  gamestate.whiteKingRookMoved = false;
-
-  gamestate.blackQueenCastle = false;
-  gamestate.blackKingCastle = false;
-  gamestate.blackKingMoved = false;
-  gamestate.blackQueenRookMoved = false;
-  gamestate.blackKingRookMoved = false;
-
-  gamestate.enPassantWhite = 0;
-  gamestate.enPasssantBlack = 0;
-
-  return gamestate;
 }
 
 function rowFromCoord(coord) {
@@ -201,7 +172,6 @@ function isViableMove(turn, start, end) {
   for (const coord of coords) {
     if (potentialBoard[coord].player === turn[0] && potentialBoard[coord].piece === 'k') {
       kingCoord = coord;
-      console.log('found');
       break;
     }
   }
