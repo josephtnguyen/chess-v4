@@ -1,0 +1,44 @@
+* {
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+body {
+  background-color: aquamarine;
+}
+
+.board {
+  border: 2px solid black;
+}
+
+.tile {
+  border: 1px solid black;
+}
+
+.selected {
+  box-shadow: inset 0 0 .5rem .5rem skyblue;
+}
+
+.board-row:nth-child(odd) > .tile:nth-child(odd) {
+  background-color: tan;
+}
+
+.board-row:nth-child(odd) > .tile:nth-child(even) {
+  background-color: beige;
+}
+
+.board-row:nth-child(even) > .tile:nth-child(even) {
+  background-color: tan;
+}
+
+.board-row:nth-child(even) > .tile:nth-child(odd) {
+  background-color: beige;
+}
+
+.board > .row.board-row > .tile.highlight {
+  background-color: skyblue;
+}
+
+.chess-piece {
+  width: 60%;
+  height: 60%;
+}
