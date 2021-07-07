@@ -102,7 +102,7 @@ function decideMove(end) {
   checkmateScan(board, gamestate);
   // drawScan(); to be added
   checkScan(board, gamestate);
-  // castleScan(); to be added
+  castleScan(board, gamestate);
 
   // change turn
   gamestate.changeTurn();
@@ -229,15 +229,26 @@ function checkScan(board, gamestate) {
   }
 
   // change gamestate if there is check
-  for (const move of allyMoveSpace) {
-    if (kingCoord === move) {
-      gamestate.check = true;
-      console.log('Check!');
-      return;
-    }
+  gamestate.check[gamestate.turn] = false;
+  if (allyMoveSpace.includes(kingCoord)) {
+    gamestate.check[gamestate.nextTurn] = true;
+    console.log('Check!');
+    return;
   }
 
-  // otherwise, remove any checks
-  gamestate.check = false;
+  // if there is no check
   console.log('no check');
+}
+
+function castleScan(board, gamestate) {
+  // check if pieces have moved
+  gamestate.checkIfMoved(board);
+
+  for (const runway of ['wk', 'wq', 'bk', 'bq']) {
+    // see if runways are clear
+    const isOpen = board.isRunwayOpen(runway);
+
+    // change castling status
+    gamestate.updateCastling(runway, isOpen);
+  }
 }

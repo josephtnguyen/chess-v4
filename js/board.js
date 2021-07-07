@@ -297,3 +297,31 @@ Board.prototype.findEnemyMoveSpace = function (turn) {
   }
   return [...enemyMoveSpace];
 }
+
+Board.prototype.isRunwayOpen = function (region) {
+  const enemyMoveSpace =  region[0] === 'w' ? this.findEnemyMoveSpace('wb') :
+                          region[0] === 'b' ? this.findEnemyMoveSpace('bw') :
+                          null;
+  const runway =          region === 'wk' ? [16, 17] :
+                          region === 'wq' ? [12, 13, 14] :
+                          region === 'bk' ? [86, 87] :
+                          region === 'bq' ? [82, 83, 84] :
+                          null;
+  const kingRunway =      region === 'wk' ? [16, 17] :
+                          region === 'wq' ? [13, 14] :
+                          region === 'bk' ? [86, 87] :
+                          region === 'bq' ? [83, 84] :
+                          null;
+
+  for (const coord in runway) {
+    if (!this.isEmptyAt(coord)) {
+      return false;
+    }
+  }
+  for (const coord in kingRunway) {
+    if (enemyMoveSpace.includes(coord)) {
+      return false;
+    }
+  }
+  return true;
+}
