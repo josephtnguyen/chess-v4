@@ -302,16 +302,17 @@ function pawnScan(board, gamestate) {
 
 function drawScan(board, gamestate) {
   gamestate.pastBoards.append(board.copy());
+  const coords = new Coords();
 
   const {turn} = gamestate;
   // 50 move rule draw
   if (gamestate.pawnOrKillCounter === 100) {
+    gamestate.drawCase = '50 move rule';
     gamestate.draw = true;
   }
 
   // statemate draw
   const enemyCoords = [];
-  const coords = new Coords();
 
   for (const coord of coords) {
     if (board.isEmptyAt(coord)) {
@@ -331,6 +332,7 @@ function drawScan(board, gamestate) {
   }
 
   if (!enemyCanMove) {
+    gamestate.drawCase = 'stalemate';
     gamestate.draw = true;
   }
 
@@ -348,8 +350,41 @@ function drawScan(board, gamestate) {
       }
     }
     if (repeats > 2) {
+      gamestate.drawCase = 'threefold repetition';
       gamestate.draw = true;
       break;
+    }
+  }
+
+  // insufficient material draw
+    // list all black and white squares
+  const blackSquares = [];
+  const whiteSquares = [];
+  for (const coord of coords) {
+    const tens = Math.floor(coord / 10);
+    const ones = coord % 10;
+    if ((tens % 2) === 0) {
+      if ((ones % 2) === 0) {
+        blackSquares.push(coord);
+      } else {
+        whiteSquares.push(coord);
+      }
+    } else {
+      if ((ones % 2) === 0) {
+        whiteSquares.push(coord);
+      } else {
+        blackSquares.push(coord);
+      }
+    }
+  }
+    // find remaining pieces
+  const whitePieces = [];
+  const blackPieces = [];
+  for (const coord of coords) {
+    if (board[coord].player === 'w') {
+      whitePieces.append(board[coord]);
+    } else if (board[coord].player === 'b') {
+      blackPieces.append(board[coord]);
     }
   }
 }
