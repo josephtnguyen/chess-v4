@@ -4,7 +4,8 @@ const gamestate = new GameState();
 
 const $board = document.querySelector('.board');
 
-document.addEventListener('click', handleClick);
+window.addEventListener('click', handleClick);
+window.addEventListener('keydown', handlePromote);
 
 updateHTMLBoard();
 
@@ -68,6 +69,27 @@ function applyClassToTile(coord, cssClass) {
 }
 
 // Running Chess
+function handlePromote(event) {
+  if (!gamestate.promoting) {
+    return;
+  }
+
+  const keyPress = event.key;
+  if (keyPress === '1') {
+    gamestate.promoting.piece = 'q';
+  } else if (keyPress === '2') {
+    gamestate.promoting.piece = 'b';
+  } else if (keyPress === '3') {
+    gamestate.promoting.piece = 'n';
+  } else if (keyPress === '4') {
+    gamestate.promoting.piece = 'r';
+  } else {
+    return;
+  }
+  gamestate.promoting = null;
+  updateHTMLBoard();
+}
+
 function handleClick(event) {
   if (!event.target.closest('.tile')) {
     gamestate.seeingOptions = false;
@@ -98,7 +120,7 @@ function decideMove(end) {
   updateHTMLBoard();
 
   // apply scans
-  // pawnScan(); to be added
+  pawnScan(board, gamestate);
   checkmateScan(board, gamestate);
   // drawScan(); to be added
   checkScan(board, gamestate);
@@ -251,4 +273,24 @@ function castleScan(board, gamestate) {
     // change castling status when possible
     gamestate.updateCastling(runway, isOpen);
   }
+}
+
+function pawnScan(board, gamestate) {
+  for (let i = 81; i < 89; i++) {
+    if (board[i].piece === 'p') {
+      gamestate.promoting = board[i];
+      return;
+    }
+  }
+
+  for (let i = 11; i < 19; i++) {
+    if (board[i].piece === 'p') {
+      gamestate.promoting = board[i];
+      return;
+    }
+  }
+}
+
+function doNothing() {
+  return;
 }

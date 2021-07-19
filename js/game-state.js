@@ -25,6 +25,8 @@ function GameState() {
   this.blackQueenRookMoved = false;
   this.blackKingRookMoved = false;
 
+  this.promoting = null;
+
   this.enPassantWhite = 0;
   this.enPasssantBlack = 0;
 }
