@@ -11,7 +11,6 @@ function GameState() {
     bw: false
   };
   this.checkmate = false;
-  this.draw = false;
 
   this.whiteQueenCanCastle = false;
   this.whiteKingCanCastle = false;
@@ -30,6 +29,8 @@ function GameState() {
   this.enPassantWhite = 0;
   this.enPasssantBlack = 0;
 
+  this.draw = false;
+  this.drawCase = null;
   this.pastBoards = [];
   this.pawnKingMoveCounter = 0;
 }
@@ -42,26 +43,32 @@ GameState.prototype.reset = function () {
   this.start = 0;
 
   this.check = {
-    whiteCheck: false,
-    blackCheck: false
+    wb: false,
+    bw: false
   };
   this.checkmate = false;
-  this.draw = false;
 
-  this.whiteQueenCastle = false;
-  this.whiteKingCastle = false;
+  this.whiteQueenCanCastle = false;
+  this.whiteKingCanCastle = false;
   this.whiteKingMoved = false;
   this.whiteQueenRookMoved = false;
   this.whiteKingRookMoved = false;
 
-  this.blackQueenCastle = false;
-  this.blackKingCastle = false;
+  this.blackQueenCanCastle = false;
+  this.blackKingCanCastle = false;
   this.blackKingMoved = false;
   this.blackQueenRookMoved = false;
   this.blackKingRookMoved = false;
 
+  this.promoting = null;
+
   this.enPassantWhite = 0;
   this.enPasssantBlack = 0;
+
+  this.draw = false;
+  this.drawCase = null;
+  this.pastBoards = [];
+  this.pawnKingMoveCounter = 0;
 }
 
 GameState.prototype.changeTurn = function () {
