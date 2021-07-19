@@ -335,4 +335,21 @@ function drawScan(board, gamestate) {
   }
 
   // threefold-repetition draw
+  for (let i = 0; i < gamestate.pastBoards.length; i++) {
+    let repeats = 1;
+    const currentBoard = gamestate.pastBoards[i];
+    // create a copy of pastBoards and remove the currentBoard from the copy
+    const pastBoardsCopy = [...gamestate.pastBoards];
+    pastBoardsCopy.splice(i, 1);
+    // see if there are any repeats
+    for (const otherBoard of pastBoardsCopy) {
+      if (currentBoard === otherBoard) {
+        repeats++;
+      }
+    }
+    if (repeats > 2) {
+      gamestate.draw = true;
+      break;
+    }
+  }
 }
