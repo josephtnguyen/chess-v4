@@ -70,6 +70,16 @@ Board.prototype.reset = function () {
   return this;
 }
 
+Board.prototype.copy = function () {
+  const copy = {};
+  const coords = new Coords();
+  for (const coord of coords) {
+    copy[coord] = this[coord].player + this[coord].piece;
+  }
+
+  return copy;
+}
+
 Board.prototype.empty = function (coord) {
   this[coord] = {
     piece: null,
@@ -86,15 +96,38 @@ Board.prototype.isEmptyAt = function (coord) {
 }
 
 Board.prototype.movePiece = function (start, end) {
+  //castling
+  if(this[start].piece === 'k') {
+    if (start === 15 && end === 13) {
+      this.movePiece(11, 14);
+    } else if (start === 15 && end === 17) {
+      this.movePiece(18, 16);
+    } else if (start === 85 && end === 83) {
+      this.movePiece(81, 84);
+    } else if (start === 85 && end === 87) {
+      this.movePiece(88, 86);
+    }
+  }
+
+  // en passant
+  if (this[start].piece === 'p') {
+    if ((end - start === 11 || end - start === 9) && !this[end].piece) {
+      this.empty(end - 10);
+    } else if ((end - start === -11 || end - start === -9) && !this[end].piece) {
+      this.empty(end + 10);
+    }
+  }
+
+  // basic move piece
   this[end] = this[start];
   this.empty(start);
 }
 
-Board.prototype.findMoveSpace = function (turn, start, killsOnly) {
+Board.prototype.findMoveSpace = function (turn, start, killsOnly, gamestate) {
   const piece = this[start].piece;
 
   if (piece === 'p') {
-    return this.pawnMoveSpace(turn, start, killsOnly);
+    return this.pawnMoveSpace(turn, start, killsOnly, gamestate);
   } else if (piece === 'r') {
     return this.rookMoveSpace(turn, start);
   } else if (piece === 'n') {
@@ -104,11 +137,11 @@ Board.prototype.findMoveSpace = function (turn, start, killsOnly) {
   } else if (piece === 'q') {
     return this.queenMoveSpace(turn, start);
   } else if (piece === 'k') {
-    return this.kingMoveSpace(turn, start, killsOnly);
+    return this.kingMoveSpace(turn, start, killsOnly, gamestate);
   }
 }
 
-Board.prototype.pawnMoveSpace = function (turn, start, killsOnly) {
+Board.prototype.pawnMoveSpace = function (turn, start, killsOnly, gamestate) {
   // turn is 'wb' or 'bw' where turn[0] is the current turn
   const coords = new Coords();
   const moveSpace = [];
@@ -137,6 +170,18 @@ Board.prototype.pawnMoveSpace = function (turn, start, killsOnly) {
         moveSpace.push(newSpot);
       }
     }
+    // en passant
+    const potentialEnPassants = [-1, 1];
+    for (const potentialEnPassant of potentialEnPassants) {
+      const newSpot = start + potentialEnPassant;
+      if (!coords.isCoord(newSpot)) {
+        continue;
+      } else if ((50 < start && start < 59) &&
+                  (this[newSpot].player === 'b' && this[newSpot].piece === 'p') &&
+                  gamestate.enPassantBlack === (newSpot + 20)) {
+        moveSpace.push(newSpot + 10);
+      }
+    }
   } else if (this[start].player === 'b') {
     // starting moves
     if (!killsOnly) {
@@ -159,6 +204,18 @@ Board.prototype.pawnMoveSpace = function (turn, start, killsOnly) {
         continue;
       } else if (this[newSpot].player === turn[1]) {
         moveSpace.push(newSpot);
+      }
+    }
+    // en passant
+    const potentialEnPassants = [-1, 1];
+    for (const potentialEnPassant of potentialEnPassants) {
+      const newSpot = start + potentialEnPassant;
+      if (!coords.isCoord(newSpot)) {
+        continue;
+      } else if ((40 < start && start < 49) &&
+        (this[newSpot].player === 'w' && this[newSpot].piece === 'p') &&
+        gamestate.enPassantWhite === (newSpot - 20)) {
+        moveSpace.push(newSpot - 10);
       }
     }
   }
@@ -254,11 +311,12 @@ Board.prototype.queenMoveSpace = function (turn, start) {
   return moveSpace;
 }
 
-Board.prototype.kingMoveSpace = function (turn, start, killsOnly) {
+Board.prototype.kingMoveSpace = function (turn, start, killsOnly, gamestate) {
   const coords = new Coords();
   const moveSpace = [];
   const kingMoves = [10, -10, 1, -1, 11, -11, 9, -9];
 
+  // normal moves
   for (const kingMove of kingMoves) {
     const newSpot = start + kingMove;
     if (!coords.isCoord(newSpot)) {
@@ -271,10 +329,30 @@ Board.prototype.kingMoveSpace = function (turn, start, killsOnly) {
       moveSpace.push(newSpot);
     }
   }
+
+  // castling
+  if (!killsOnly) {
+    const canCastleKeys = turn === 'wb'
+      ? ['whiteKingCanCastle', 'whiteQueenCanCastle']
+      : ['blackKingCanCastle', 'blackQueenCanCastle'];
+    for (const canCastleKey of canCastleKeys) {
+      if (gamestate[canCastleKey]) {
+        if (canCastleKey === 'whiteKingCanCastle') {
+          moveSpace.push(17);
+        } else if (canCastleKey === 'whiteQueenCanCastle') {
+          moveSpace.push(13);
+        } else if (canCastleKey === 'blackKingCanCastle') {
+          moveSpace.push(87);
+        } else if (canCastleKey === 'blackQueenCanCastle') {
+          moveSpace.push(83);
+        }
+      }
+    }
+  }
   return moveSpace;
 }
 
-Board.prototype.findEnemyMoveSpace = function (turn) {
+Board.prototype.findEnemyMoveSpace = function (turn, gamestate) {
   const enemyMoveSpace = new Set();
   const enemyCoords = [];
   const coords = new Coords();
@@ -290,10 +368,38 @@ Board.prototype.findEnemyMoveSpace = function (turn) {
 
   // union all move spaces of enemy pieces
   for (const enemyCoord of enemyCoords) {
-    const eachMoveSpace = this.findMoveSpace(turn[1] + turn[0], enemyCoord, true);
+    const eachMoveSpace = this.findMoveSpace(turn[1] + turn[0], enemyCoord, true, gamestate);
     for (const move of eachMoveSpace) {
       enemyMoveSpace.add(move);
     }
   }
   return [...enemyMoveSpace];
+}
+
+Board.prototype.isRunwayOpen = function (region, gamestate) {
+  const enemyMoveSpace =  region[0] === 'w' ? this.findEnemyMoveSpace('wb', gamestate) :
+                          region[0] === 'b' ? this.findEnemyMoveSpace('bw', gamestate) :
+                          null;
+  const runway =          region === 'wk' ? [16, 17] :
+                          region === 'wq' ? [12, 13, 14] :
+                          region === 'bk' ? [86, 87] :
+                          region === 'bq' ? [82, 83, 84] :
+                          null;
+  const kingRunway =      region === 'wk' ? [16, 17] :
+                          region === 'wq' ? [13, 14] :
+                          region === 'bk' ? [86, 87] :
+                          region === 'bq' ? [83, 84] :
+                          null;
+
+  for (const coord of runway) {
+    if (!this.isEmptyAt(coord)) {
+      return false;
+    }
+  }
+  for (const coord of kingRunway) {
+    if (enemyMoveSpace.includes(coord)) {
+      return false;
+    }
+  }
+  return true;
 }

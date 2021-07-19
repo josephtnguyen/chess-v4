@@ -4,7 +4,8 @@ const gamestate = new GameState();
 
 const $board = document.querySelector('.board');
 
-document.addEventListener('click', handleClick);
+window.addEventListener('click', handleClick);
+window.addEventListener('keydown', handlePromote);
 
 updateHTMLBoard();
 
@@ -68,6 +69,27 @@ function applyClassToTile(coord, cssClass) {
 }
 
 // Running Chess
+function handlePromote(event) {
+  if (!gamestate.promoting) {
+    return;
+  }
+
+  const keyPress = event.key;
+  if (keyPress === '1') {
+    gamestate.promoting.piece = 'q';
+  } else if (keyPress === '2') {
+    gamestate.promoting.piece = 'b';
+  } else if (keyPress === '3') {
+    gamestate.promoting.piece = 'n';
+  } else if (keyPress === '4') {
+    gamestate.promoting.piece = 'r';
+  } else {
+    return;
+  }
+  gamestate.promoting = null;
+  updateHTMLBoard();
+}
+
 function handleClick(event) {
   if (!event.target.closest('.tile')) {
     gamestate.seeingOptions = false;
@@ -92,17 +114,34 @@ function decideMove(end) {
     return;
   }
 
+  const {start} = gamestate;
+  // update draw counter
+  if (board[end].piece) {
+    gamestate.pawnOrKillCounter = 0;
+  } else if (board[start].piece === 'p') {
+    gamestate.pawnOrKillCounter = 0;
+  } else {
+    gamestate.pawnOrKillCounter++;
+  }
+
+  // record en passant
+  if (board[start].piece === 'p' && (20 < start && start < 29) && (40 < end && end < 49)) {
+    gamestate.enPassantWhite = start;
+  } else if (board[start].piece === 'p' && (70 < start && start < 79) && (50 < end && end < 59)) {
+    gamestate.enPassantBlack = start;
+  }
+
   // move piece
-  board.movePiece(gamestate.start, end);
+  board.movePiece(start, end);
   gamestate.seeingOptions = false;
   updateHTMLBoard();
 
   // apply scans
-  // pawnScan(); to be added
+  pawnScan(board, gamestate);
   checkmateScan(board, gamestate);
-  // drawScan(); to be added
+  drawScan(board, gamestate);
   checkScan(board, gamestate);
-  // castleScan(); to be added
+  castleScan(board, gamestate);
 
   // change turn
   gamestate.changeTurn();
@@ -124,7 +163,7 @@ function showOptions(start) {
 
   // find all potential moves
   const potentialMoves = [];
-  const moveSpace = board.findMoveSpace(gamestate.turn, start, false);
+  const moveSpace = board.findMoveSpace(gamestate.turn, start, false, gamestate);
   for (let i = 0; i < moveSpace.length; i++) {
     if (isViableMove(gamestate.turn, start, moveSpace[i])) {
       potentialMoves.push(moveSpace[i]);
@@ -143,7 +182,7 @@ function isViableStart(start, turn) {
   }
 
   // find move space of start
-  const moveSpace = board.findMoveSpace(turn, start, false);
+  const moveSpace = board.findMoveSpace(turn, start, false, gamestate);
   if (!moveSpace) {
     return false;
   }
@@ -163,7 +202,7 @@ function isViableMove(turn, start, end) {
   const potentialBoard = {...board};
   Object.setPrototypeOf(potentialBoard, Board.prototype);
   potentialBoard.movePiece(start, end);
-  const enemyMoveSpace = potentialBoard.findEnemyMoveSpace(turn);
+  const enemyMoveSpace = potentialBoard.findEnemyMoveSpace(turn, gamestate);
 
   // find ally king coord after move
   const coords = new Coords();
@@ -216,7 +255,7 @@ function checkScan(board, gamestate) {
     return;
   }
 
-  const allyMoveSpace = board.findEnemyMoveSpace(gamestate.nextTurn);
+  const allyMoveSpace = board.findEnemyMoveSpace(gamestate.nextTurn, gamestate);
 
   // find enemy king coord after move
   const coords = new Coords();
@@ -229,15 +268,172 @@ function checkScan(board, gamestate) {
   }
 
   // change gamestate if there is check
-  for (const move of allyMoveSpace) {
-    if (kingCoord === move) {
-      gamestate.check = true;
-      console.log('Check!');
+  gamestate.check[gamestate.turn] = false;
+  if (allyMoveSpace.includes(kingCoord)) {
+    gamestate.check[gamestate.nextTurn] = true;
+    console.log('Check!');
+    return;
+  }
+
+  // if there is no check
+  console.log('no check');
+}
+
+function castleScan(board, gamestate) {
+  // check if pieces have moved
+  gamestate.checkIfMoved(board);
+
+  for (const runway of ['wk', 'wq', 'bk', 'bq']) {
+    // see if runway is clear
+    const isOpen = board.isRunwayOpen(runway, gamestate);
+
+    // change castling status when possible
+    gamestate.updateCastling(runway, isOpen);
+  }
+}
+
+function pawnScan(board, gamestate) {
+  for (let i = 81; i < 89; i++) {
+    if (board[i].piece === 'p') {
+      gamestate.promoting = board[i];
       return;
     }
   }
 
-  // otherwise, remove any checks
-  gamestate.check = false;
-  console.log('no check');
+  for (let i = 11; i < 19; i++) {
+    if (board[i].piece === 'p') {
+      gamestate.promoting = board[i];
+      return;
+    }
+  }
+}
+
+function drawScan(board, gamestate) {
+  gamestate.pastBoards.push(board.copy());
+  const coords = new Coords();
+
+  const {turn} = gamestate;
+  // 50 move rule draw
+  if (gamestate.pawnOrKillCounter === 100) {
+    gamestate.drawCase = '50 move rule';
+    gamestate.draw = true;
+  }
+
+  // statemate draw
+  const enemyCoords = [];
+
+  for (const coord of coords) {
+    if (board.isEmptyAt(coord)) {
+      continue;
+    } else if (board[coord].player === turn[1]) {
+      enemyCoords.push(coord);
+    }
+  }
+
+  let enemyCanMove = false;
+  for (const enemyCoord of enemyCoords) {
+    const eachMoveSpace = board.findMoveSpace(turn[1] + turn[0], enemyCoord, false, gamestate);
+    if (eachMoveSpace.length !== 0) {
+      enemyCanMove = true;
+      break;
+    }
+  }
+
+  if (!enemyCanMove) {
+    gamestate.drawCase = 'stalemate';
+    gamestate.draw = true;
+  }
+
+  // threefold-repetition draw
+  for (let i = 0; i < gamestate.pastBoards.length; i++) {
+    let repeats = 1;
+    const currentBoard = gamestate.pastBoards[i];
+    // create a copy of pastBoards and remove the currentBoard from the copy
+    const pastBoardsCopy = [...gamestate.pastBoards];
+    pastBoardsCopy.splice(i, 1);
+    // see if there are any repeats
+    for (const otherBoard of pastBoardsCopy) {
+      if (currentBoard === otherBoard) {
+        repeats++;
+      }
+    }
+    if (repeats > 2) {
+      gamestate.drawCase = 'threefold repetition';
+      gamestate.draw = true;
+      break;
+    }
+  }
+
+  // insufficient material draw
+    // list all black and white squares
+  const blackSquares = [];
+  const whiteSquares = [];
+  for (const coord of coords) {
+    const tens = Math.floor(coord / 10);
+    const ones = coord % 10;
+    if ((tens % 2) === 0) {
+      if ((ones % 2) === 0) {
+        blackSquares.push(coord);
+      } else {
+        whiteSquares.push(coord);
+      }
+    } else {
+      if ((ones % 2) === 0) {
+        whiteSquares.push(coord);
+      } else {
+        blackSquares.push(coord);
+      }
+    }
+  }
+    // find remaining pieces
+  const whitePieces = [];
+  const blackPieces = [];
+  for (const coord of coords) {
+    if (board[coord].player === 'w') {
+      whitePieces.push(board[coord].piece);
+    } else if (board[coord].player === 'b') {
+      blackPieces.push(board[coord].piece);
+    }
+  }
+    // cases
+  if (blackPieces.length === 1) {
+    if (whitePieces.length === 1) {
+      gamestate.drawCase = 'insufficient materials';
+      gamestate.draw = true;
+    } else if (whitePieces.length === 2) {
+      if (whitePieces.includes('b') || whitePieces.includes('n')) {
+        gamestate.drawCase = 'insufficient materials';
+        gamestate.draw = true;
+      }
+    }
+  } else if (whitePieces.length === 1) {
+    if (blackPieces.length === 1) {
+      gamestate.drawCase = 'insufficient materials';
+      gamestate.draw = true;
+    } else if (blackPieces.length === 2) {
+      if (blackPieces.includes('b') || blackPieces.includes('n')) {
+        gamestate.drawCase = 'insufficient materials';
+        gamestate.draw = true;
+      }
+    }
+  } else if (blackPieces.length === 2 && whitePieces.length === 2) {
+    if (blackPieces.includes('b') && whitePieces.includes('b')) {
+      const bishopCoords = [];
+      for (const coord of coords) {
+        if (board[coord].piece === 'b') {
+          bishopCoords.push(coord);
+        }
+      }
+      if (blackSquares.includes(bishopCoords[0]) && blackSquares.includes(bishopCoords[1])) {
+        gamestate.drawCase = 'insufficient materials';
+        gamestate.draw = true;
+      } else if (whitePieces.includes(bishopCoords[0]) && whitePieces.includes(bishopCoords[1])) {
+        gamestate.drawCase = 'insufficient materials';
+        gamestate.draw = true;
+      }
+    }
+  }
+  if (gamestate.draw) {
+    console.log(`Draw by ${gamestate.drawCase}`);
+  }
 }
