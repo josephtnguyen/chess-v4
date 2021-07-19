@@ -382,9 +382,47 @@ function drawScan(board, gamestate) {
   const blackPieces = [];
   for (const coord of coords) {
     if (board[coord].player === 'w') {
-      whitePieces.append(board[coord]);
+      whitePieces.append(board[coord].piece);
     } else if (board[coord].player === 'b') {
-      blackPieces.append(board[coord]);
+      blackPieces.append(board[coord].piece);
+    }
+  }
+    // cases
+  if (blackPieces.length === 1) {
+    if (whitePieces.length === 1) {
+      gamestate.drawCase = 'insufficient materials';
+      gamestate.draw = true;
+    } else if (whitePieces.length === 2) {
+      if (whitePieces.includes('b') || whitePieces.includes('n')) {
+        gamestate.drawCase = 'insufficient materials';
+        gamestate.draw = true;
+      }
+    }
+  } else if (whitePieces.length === 1) {
+    if (blackPieces.length === 1) {
+      gamestate.drawCase = 'insufficient materials';
+      gamestate.draw = true;
+    } else if (blackPieces.length === 2) {
+      if (blackPieces.includes('b') || blackPieces.includes('n')) {
+        gamestate.drawCase = 'insufficient materials';
+        gamestate.draw = true;
+      }
+    }
+  } else if (blackPieces.length === 2 && whitePieces.length === 2) {
+    if (blackPieces.includes('b') && whitePieces.includes('b')) {
+      const bishopCoords = [];
+      for (const coord of coords) {
+        if (board[coord].piece === 'b') {
+          bishopCoords.push(coord);
+        }
+      }
+      if (blackSquares.includes(bishopCoords[0]) && blackSquares.includes(bishopCoords[1])) {
+        gamestate.drawCase = 'insufficient materials';
+        gamestate.draw = true;
+      } else if (whitePieces.includes(bishopCoords[0]) && whitePieces.includes(bishopCoords[1])) {
+        gamestate.drawCase = 'insufficient materials';
+        gamestate.draw = true;
+      }
     }
   }
 }
