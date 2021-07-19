@@ -29,6 +29,9 @@ function GameState() {
 
   this.enPassantWhite = 0;
   this.enPasssantBlack = 0;
+
+  this.pastBoards = [];
+  this.pawnKingMoveCounter = 0;
 }
 
 GameState.prototype.reset = function () {

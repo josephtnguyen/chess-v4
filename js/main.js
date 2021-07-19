@@ -114,6 +114,15 @@ function decideMove(end) {
     return;
   }
 
+  // update draw counter
+  if (board[end].piece) {
+    gamestate.pawnOrKillCounter = 0;
+  } else if (board[gamestate.start].piece === 'p') {
+    gamestate.pawnOrKillCounter = 0;
+  } else {
+    gamestate.pawnOrKillCounter++;
+  }
+
   // move piece
   board.movePiece(gamestate.start, end);
   gamestate.seeingOptions = false;
@@ -122,7 +131,7 @@ function decideMove(end) {
   // apply scans
   pawnScan(board, gamestate);
   checkmateScan(board, gamestate);
-  // drawScan(); to be added
+  drawScan(board, gamestate);
   checkScan(board, gamestate);
   castleScan(board, gamestate);
 
@@ -291,6 +300,39 @@ function pawnScan(board, gamestate) {
   }
 }
 
-function doNothing() {
-  return;
+function drawScan(board, gamestate) {
+  gamestate.pastBoards.append(board.copy());
+
+  const {turn} = gamestate;
+  // 50 move rule draw
+  if (gamestate.pawnOrKillCounter === 100) {
+    gamestate.draw = true;
+  }
+
+  // statemate draw
+  const enemyCoords = [];
+  const coords = new Coords();
+
+  for (const coord of coords) {
+    if (board.isEmptyAt(coord)) {
+      continue;
+    } else if (board[coord].player === turn[1]) {
+      enemyCoords.push(coord);
+    }
+  }
+
+  let enemyCanMove = false;
+  for (const enemyCoord of enemyCoords) {
+    const eachMoveSpace = board.findMoveSpace(turn[1] + turn[0], enemyCoord, false, gamestate);
+    if (eachMoveSpace.length !== 0) {
+      enemyCanMove = true;
+      break;
+    }
+  }
+
+  if (!enemyCanMove) {
+    gamestate.draw = true;
+  }
+
+  // threefold-repetition draw
 }

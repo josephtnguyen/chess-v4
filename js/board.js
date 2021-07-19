@@ -70,6 +70,16 @@ Board.prototype.reset = function () {
   return this;
 }
 
+Board.prototype.copy = function () {
+  const copy = {};
+  const coords = new Coords();
+  for (const coord of coords) {
+    copy[coord] = this[coord].player + this[coord].piece;
+  }
+
+  return copy;
+}
+
 Board.prototype.empty = function (coord) {
   this[coord] = {
     piece: null,
