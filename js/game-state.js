@@ -8,7 +8,7 @@ function GameState() {
 
   this.check = {
     wb: false,
-    bw: = false
+    bw: false
   };
   this.checkmate = false;
   this.draw = false;
@@ -38,7 +38,7 @@ GameState.prototype.reset = function () {
 
   this.check = {
     whiteCheck: false,
-    blackCheck: = false
+    blackCheck: false
   };
   this.checkmate = false;
   this.draw = false;
@@ -78,7 +78,7 @@ GameState.prototype.checkIfMoved = function (board) {
     'blackKingRookMoved',
     'blackQueenRookMoved'
   ];
-  for (let i = 0, i < movedKeys.length; i++) {
+  for (let i = 0; i < movedKeys.length; i++) {
     if (board.isEmptyAt(coords[i])) {
       gamestate[movedKeys[i]] = true;
     }

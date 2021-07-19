@@ -124,7 +124,7 @@ function showOptions(start) {
 
   // find all potential moves
   const potentialMoves = [];
-  const moveSpace = board.findMoveSpace(gamestate.turn, start, false);
+  const moveSpace = board.findMoveSpace(gamestate.turn, start, false, gamestate);
   for (let i = 0; i < moveSpace.length; i++) {
     if (isViableMove(gamestate.turn, start, moveSpace[i])) {
       potentialMoves.push(moveSpace[i]);
@@ -143,7 +143,7 @@ function isViableStart(start, turn) {
   }
 
   // find move space of start
-  const moveSpace = board.findMoveSpace(turn, start, false);
+  const moveSpace = board.findMoveSpace(turn, start, false, gamestate);
   if (!moveSpace) {
     return false;
   }
@@ -163,7 +163,7 @@ function isViableMove(turn, start, end) {
   const potentialBoard = {...board};
   Object.setPrototypeOf(potentialBoard, Board.prototype);
   potentialBoard.movePiece(start, end);
-  const enemyMoveSpace = potentialBoard.findEnemyMoveSpace(turn);
+  const enemyMoveSpace = potentialBoard.findEnemyMoveSpace(turn, gamestate);
 
   // find ally king coord after move
   const coords = new Coords();
@@ -216,7 +216,7 @@ function checkScan(board, gamestate) {
     return;
   }
 
-  const allyMoveSpace = board.findEnemyMoveSpace(gamestate.nextTurn);
+  const allyMoveSpace = board.findEnemyMoveSpace(gamestate.nextTurn, gamestate);
 
   // find enemy king coord after move
   const coords = new Coords();
@@ -245,10 +245,10 @@ function castleScan(board, gamestate) {
   gamestate.checkIfMoved(board);
 
   for (const runway of ['wk', 'wq', 'bk', 'bq']) {
-    // see if runways are clear
+    // see if runway is clear
     const isOpen = board.isRunwayOpen(runway);
 
-    // change castling status
+    // change castling status when possible
     gamestate.updateCastling(runway, isOpen);
   }
 }
