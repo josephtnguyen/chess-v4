@@ -97,7 +97,7 @@ Board.prototype.isEmptyAt = function (coord) {
 
 Board.prototype.movePiece = function (start, end) {
   //castling
-  if(board[start].piece === 'k') {
+  if(this[start].piece === 'k') {
     if (start === 15 && end === 13) {
       this.movePiece(11, 14);
     } else if (start === 15 && end === 17) {
@@ -106,6 +106,15 @@ Board.prototype.movePiece = function (start, end) {
       this.movePiece(81, 84);
     } else if (start === 85 && end === 87) {
       this.movePiece(88, 86);
+    }
+  }
+
+  // en passant
+  if (this[start].piece === 'p') {
+    if ((end - start === 11 || end - start === 9) && !this[end].piece) {
+      this.empty(end - 10);
+    } else if ((end - start === -11 || end - start === -9) && !this[end].piece) {
+      this.empty(end + 10);
     }
   }
 
@@ -161,6 +170,18 @@ Board.prototype.pawnMoveSpace = function (turn, start, killsOnly, gamestate) {
         moveSpace.push(newSpot);
       }
     }
+    // en passant
+    const potentialEnPassants = [-1, 1];
+    for (const potentialEnPassant of potentialEnPassants) {
+      const newSpot = start + potentialEnPassant;
+      if (!coords.isCoord(newSpot)) {
+        continue;
+      } else if ((50 < start && start < 59) &&
+                  (this[newSpot].player === 'b' && this[newSpot].piece === 'p') &&
+                  gamestate.enPassantBlack === (newSpot + 20)) {
+        moveSpace.push(newSpot + 10);
+      }
+    }
   } else if (this[start].player === 'b') {
     // starting moves
     if (!killsOnly) {
@@ -183,6 +204,18 @@ Board.prototype.pawnMoveSpace = function (turn, start, killsOnly, gamestate) {
         continue;
       } else if (this[newSpot].player === turn[1]) {
         moveSpace.push(newSpot);
+      }
+    }
+    // en passant
+    const potentialEnPassants = [-1, 1];
+    for (const potentialEnPassant of potentialEnPassants) {
+      const newSpot = start + potentialEnPassant;
+      if (!coords.isCoord(newSpot)) {
+        continue;
+      } else if ((40 < start && start < 49) &&
+        (this[newSpot].player === 'w' && this[newSpot].piece === 'p') &&
+        gamestate.enPassantWhite === (newSpot - 20)) {
+        moveSpace.push(newSpot - 10);
       }
     }
   }

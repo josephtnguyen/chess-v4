@@ -114,17 +114,25 @@ function decideMove(end) {
     return;
   }
 
+  const {start} = gamestate;
   // update draw counter
   if (board[end].piece) {
     gamestate.pawnOrKillCounter = 0;
-  } else if (board[gamestate.start].piece === 'p') {
+  } else if (board[start].piece === 'p') {
     gamestate.pawnOrKillCounter = 0;
   } else {
     gamestate.pawnOrKillCounter++;
   }
 
+  // record en passant
+  if (board[start].piece === 'p' && (20 < start && start < 29) && (40 < end && end < 49)) {
+    gamestate.enPassantWhite = start;
+  } else if (board[start].piece === 'p' && (70 < start && start < 79) && (50 < end && end < 59)) {
+    gamestate.enPassantBlack = start;
+  }
+
   // move piece
-  board.movePiece(gamestate.start, end);
+  board.movePiece(start, end);
   gamestate.seeingOptions = false;
   updateHTMLBoard();
 
@@ -277,7 +285,7 @@ function castleScan(board, gamestate) {
 
   for (const runway of ['wk', 'wq', 'bk', 'bq']) {
     // see if runway is clear
-    const isOpen = board.isRunwayOpen(runway);
+    const isOpen = board.isRunwayOpen(runway, gamestate);
 
     // change castling status when possible
     gamestate.updateCastling(runway, isOpen);
@@ -301,7 +309,7 @@ function pawnScan(board, gamestate) {
 }
 
 function drawScan(board, gamestate) {
-  gamestate.pastBoards.append(board.copy());
+  gamestate.pastBoards.push(board.copy());
   const coords = new Coords();
 
   const {turn} = gamestate;
@@ -382,9 +390,9 @@ function drawScan(board, gamestate) {
   const blackPieces = [];
   for (const coord of coords) {
     if (board[coord].player === 'w') {
-      whitePieces.append(board[coord].piece);
+      whitePieces.push(board[coord].piece);
     } else if (board[coord].player === 'b') {
-      blackPieces.append(board[coord].piece);
+      blackPieces.push(board[coord].piece);
     }
   }
     // cases

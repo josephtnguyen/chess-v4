@@ -27,7 +27,7 @@ function GameState() {
   this.promoting = null;
 
   this.enPassantWhite = 0;
-  this.enPasssantBlack = 0;
+  this.enPassantBlack = 0;
 
   this.draw = false;
   this.drawCase = null;
@@ -75,6 +75,9 @@ GameState.prototype.changeTurn = function () {
   if (this.turn === 'bw') {
     this.turnNum++;
     console.log('turnNum:', this.turnNum);
+    this.enPassantWhite = 0;
+  } else {
+    this.enPassantBlack = 0;
   }
   this.nextTurn = this.turn;
   this.turn = this.turn[1] + this.turn[0];
