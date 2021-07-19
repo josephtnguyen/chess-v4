@@ -425,4 +425,7 @@ function drawScan(board, gamestate) {
       }
     }
   }
+  if (gamestate.draw) {
+    console.log(`Draw by ${gamestate.drawCase}`);
+  }
 }
